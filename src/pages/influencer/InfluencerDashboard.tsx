@@ -3,38 +3,32 @@ import { AppShell } from '@/components/layout/AppShell';
 import { StatCard } from '@/components/ui/stat-card';
 import { 
   IndianRupee, 
-  Users, 
   TrendingUp,
   Clock,
   Share2,
   Copy,
-  CheckCircle2,
-  XCircle,
-  Timer
+  Ticket,
+  Users
 } from 'lucide-react';
-import { InfluencerStats, Referral } from '@/types/user';
 import { toast } from 'sonner';
 
-// Mock data
-const mockStats: InfluencerStats = {
-  totalReferrals: 847,
-  activeReferrals: 312,
-  totalCommission: 234500,
-  pendingCommission: 28000,
+// Mock data - will come from API
+const stats = {
+  totalRevenue: 234500,
+  pendingRevenue: 28000,
+  totalCoupons: 12,
+  activeCoupons: 5,
+  totalRedemptions: 847,
   conversionRate: 36.8,
-  thisMonthReferrals: 45,
 };
 
-const mockReferrals: Referral[] = [
-  { id: '1', name: 'Amit Kumar', email: 'amit.k@email.com', status: 'converted', date: '2 hours ago', commission: 500 },
-  { id: '2', name: 'Sneha Patel', email: 'sneha.p@email.com', status: 'pending', date: '5 hours ago' },
-  { id: '3', name: 'Rajesh Singh', email: 'rajesh.s@email.com', status: 'converted', date: 'Yesterday', commission: 750 },
-  { id: '4', name: 'Neha Sharma', email: 'neha.s@email.com', status: 'pending', date: 'Yesterday' },
+const activeCoupons = [
+  { id: '1', code: 'PRIYA20', discount: '20%', redemptions: 156, status: 'active' },
+  { id: '2', code: 'PRIYA50', discount: '₹50 off', redemptions: 89, status: 'active' },
+  { id: '3', code: 'FLASH30', discount: '30%', redemptions: 234, status: 'active' },
 ];
 
 const InfluencerDashboard: React.FC = () => {
-  const referralCode = 'PRIYA2024';
-  
   const formatCurrency = (amount: number) => {
     if (amount >= 100000) {
       return `₹${(amount / 100000).toFixed(1)}L`;
@@ -42,89 +36,93 @@ const InfluencerDashboard: React.FC = () => {
     return `₹${(amount / 1000).toFixed(1)}K`;
   };
 
-  const copyReferralCode = () => {
-    navigator.clipboard.writeText(referralCode);
-    toast.success('Referral code copied!');
-  };
-
-  const getStatusIcon = (status: Referral['status']) => {
-    switch (status) {
-      case 'converted':
-        return <CheckCircle2 className="h-4 w-4 text-success" />;
-      case 'pending':
-        return <Timer className="h-4 w-4 text-warning" />;
-      case 'expired':
-        return <XCircle className="h-4 w-4 text-muted-foreground" />;
-    }
-  };
-
-  const getStatusColor = (status: Referral['status']) => {
-    switch (status) {
-      case 'converted':
-        return 'bg-success/10 text-success';
-      case 'pending':
-        return 'bg-warning/10 text-warning';
-      case 'expired':
-        return 'bg-muted text-muted-foreground';
-    }
+  const copyCode = (code: string) => {
+    navigator.clipboard.writeText(code);
+    toast.success('Coupon code copied!');
   };
 
   return (
     <AppShell showGreeting>
       <div className="px-4 py-4 space-y-6">
-        {/* Referral Code Card */}
-        <div className="p-4 rounded-2xl gradient-primary text-primary-foreground animate-fade-in">
-          <p className="text-sm opacity-80 mb-1">Your Referral Code</p>
-          <div className="flex items-center justify-between">
-            <p className="text-2xl font-bold tracking-wider">{referralCode}</p>
-            <div className="flex gap-2">
-              <button
-                onClick={copyReferralCode}
-                className="p-2.5 rounded-xl bg-primary-foreground/20 hover:bg-primary-foreground/30 transition-colors"
-              >
-                <Copy className="h-5 w-5" />
-              </button>
-              <button className="p-2.5 rounded-xl bg-primary-foreground/20 hover:bg-primary-foreground/30 transition-colors">
-                <Share2 className="h-5 w-5" />
-              </button>
-            </div>
-          </div>
-        </div>
-
         {/* Stats Grid */}
         <div className="grid grid-cols-2 gap-3">
           <StatCard
-            title="Total Earnings"
-            value={formatCurrency(mockStats.totalCommission)}
+            title="Total Revenue"
+            value={formatCurrency(stats.totalRevenue)}
             icon={IndianRupee}
+            variant="primary"
             trend={{ value: 18, isPositive: true }}
           />
           <StatCard
             title="Pending"
-            value={formatCurrency(mockStats.pendingCommission)}
+            value={formatCurrency(stats.pendingRevenue)}
             icon={Clock}
             subtitle="Processing"
           />
           <StatCard
-            title="Total Referrals"
-            value={mockStats.totalReferrals}
+            title="Total Redemptions"
+            value={stats.totalRedemptions}
             icon={Users}
           />
           <StatCard
             title="Conversion Rate"
-            value={`${mockStats.conversionRate}%`}
+            value={`${stats.conversionRate}%`}
             icon={TrendingUp}
             variant="success"
           />
         </div>
+
+        {/* Active Coupons */}
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-bold text-foreground">Active Coupons</h2>
+            <button className="text-sm font-medium text-primary">View All</button>
+          </div>
+          <div className="space-y-3">
+            {activeCoupons.map((coupon, index) => (
+              <div
+                key={coupon.id}
+                className="p-4 rounded-xl bg-card shadow-card animate-slide-up"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 rounded-xl bg-accent">
+                      <Ticket className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-foreground tracking-wide">{coupon.code}</p>
+                      <p className="text-sm text-muted-foreground">{coupon.discount}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="text-right mr-2">
+                      <p className="text-sm font-semibold text-foreground">{coupon.redemptions}</p>
+                      <p className="text-xs text-muted-foreground">uses</p>
+                    </div>
+                    <button
+                      onClick={() => copyCode(coupon.code)}
+                      className="p-2 rounded-lg bg-accent hover:bg-accent/80 transition-colors"
+                    >
+                      <Copy className="h-4 w-4 text-primary" />
+                    </button>
+                    <button className="p-2 rounded-lg bg-accent hover:bg-accent/80 transition-colors">
+                      <Share2 className="h-4 w-4 text-primary" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
 
         {/* This Month Stats */}
         <section>
           <h2 className="text-lg font-bold text-foreground mb-3">This Month</h2>
           <div className="grid grid-cols-3 gap-3">
             <div className="p-4 rounded-xl bg-card shadow-card text-center">
-              <p className="text-2xl font-bold text-foreground">{mockStats.thisMonthReferrals}</p>
-              <p className="text-xs text-muted-foreground mt-1">Referrals</p>
+              <p className="text-2xl font-bold text-foreground">45</p>
+              <p className="text-xs text-muted-foreground mt-1">Redemptions</p>
             </div>
             <div className="p-4 rounded-xl bg-card shadow-card text-center">
               <p className="text-2xl font-bold text-success">17</p>
@@ -137,52 +135,12 @@ const InfluencerDashboard: React.FC = () => {
           </div>
         </section>
 
-        {/* Recent Referrals */}
-        <section>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-bold text-foreground">Recent Referrals</h2>
-            <button className="text-sm font-medium text-primary">View All</button>
-          </div>
-          <div className="space-y-3">
-            {mockReferrals.map((referral, index) => (
-              <div
-                key={referral.id}
-                className="p-4 rounded-xl bg-card shadow-card animate-slide-up"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-accent flex items-center justify-center">
-                      <span className="text-sm font-semibold text-primary">
-                        {referral.name.split(' ').map(n => n[0]).join('')}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="font-semibold text-foreground">{referral.name}</p>
-                      <p className="text-xs text-muted-foreground">{referral.date}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {referral.commission && (
-                      <span className="text-sm font-semibold text-success">+₹{referral.commission}</span>
-                    )}
-                    <span className={`flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(referral.status)}`}>
-                      {getStatusIcon(referral.status)}
-                      {referral.status.charAt(0).toUpperCase() + referral.status.slice(1)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
         {/* Tips Card */}
         <section className="pb-4">
           <div className="p-4 rounded-xl bg-accent border border-border">
             <p className="text-sm font-medium text-foreground mb-2">💡 Pro Tip</p>
             <p className="text-sm text-muted-foreground">
-              Share your referral code on social media during exam announcement days for 3x more conversions!
+              Share your coupon codes on social media during exam announcement days for 3x more conversions!
             </p>
           </div>
         </section>

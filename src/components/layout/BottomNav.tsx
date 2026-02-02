@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { Home, BarChart3, Wallet, User, BookOpen, Users } from 'lucide-react';
+import { Home, BookOpen, TrendingUp, IndianRupee, Ticket } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface NavItem {
@@ -13,15 +13,15 @@ interface NavItem {
 const teacherNavItems: NavItem[] = [
   { icon: Home, label: 'Home', path: '/teacher' },
   { icon: BookOpen, label: 'Classes', path: '/teacher/classes' },
-  { icon: Wallet, label: 'Earnings', path: '/teacher/earnings' },
-  { icon: User, label: 'Profile', path: '/teacher/profile' },
+  { icon: TrendingUp, label: 'Performance', path: '/teacher/performance' },
+  { icon: IndianRupee, label: 'Revenue', path: '/teacher/revenue' },
 ];
 
 const influencerNavItems: NavItem[] = [
   { icon: Home, label: 'Home', path: '/influencer' },
-  { icon: Users, label: 'Referrals', path: '/influencer/referrals' },
-  { icon: Wallet, label: 'Earnings', path: '/influencer/earnings' },
-  { icon: User, label: 'Profile', path: '/influencer/profile' },
+  { icon: Ticket, label: 'Coupons', path: '/influencer/coupons' },
+  { icon: TrendingUp, label: 'Performance', path: '/influencer/performance' },
+  { icon: IndianRupee, label: 'Revenue', path: '/influencer/revenue' },
 ];
 
 export const BottomNav: React.FC = () => {
@@ -43,14 +43,22 @@ export const BottomNav: React.FC = () => {
               key={item.path}
               onClick={() => navigate(item.path)}
               className={cn(
-                'flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-all duration-200 min-w-[64px]',
+                'flex flex-col items-center gap-1 py-2 px-3 rounded-xl transition-all duration-200 min-w-[70px]',
                 isActive 
-                  ? 'text-primary bg-accent' 
-                  : 'text-muted-foreground hover:text-foreground'
+                  ? 'text-primary' 
+                  : 'text-muted-foreground'
               )}
             >
-              <Icon className={cn('h-5 w-5', isActive && 'animate-scale-in')} />
-              <span className="text-xs font-medium">{item.label}</span>
+              <div className={cn(
+                'p-1.5 rounded-lg transition-colors',
+                isActive && 'bg-accent'
+              )}>
+                <Icon className={cn('h-5 w-5', isActive && 'animate-scale-in')} strokeWidth={isActive ? 2.5 : 2} />
+              </div>
+              <span className={cn(
+                'text-xs',
+                isActive ? 'font-semibold' : 'font-medium'
+              )}>{item.label}</span>
             </button>
           );
         })}

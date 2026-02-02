@@ -1,30 +1,24 @@
 import React from 'react';
 import { AppShell } from '@/components/layout/AppShell';
 import { StatCard } from '@/components/ui/stat-card';
-import { ActionCard } from '@/components/ui/action-card';
 import { 
   IndianRupee, 
   Users, 
   BookOpen, 
   Calendar, 
   TrendingUp,
-  Clock,
-  Plus,
-  FileText
+  Clock
 } from 'lucide-react';
-import { TeacherStats, UpcomingClass } from '@/types/user';
 
-// Mock data
-const mockStats: TeacherStats = {
-  totalClasses: 156,
-  totalStudents: 2840,
+// Mock data - will come from API
+const stats = {
   totalEarnings: 485000,
   pendingEarnings: 45000,
-  upcomingClasses: 8,
+  totalStudents: 2840,
   completedClasses: 148,
 };
 
-const mockUpcomingClasses: UpcomingClass[] = [
+const upcomingClasses = [
   { id: '1', title: 'SSC CGL Maths', subject: 'Mathematics', date: 'Today', time: '4:00 PM', students: 342 },
   { id: '2', title: 'Bank PO Reasoning', subject: 'Reasoning', date: 'Tomorrow', time: '10:00 AM', students: 256 },
   { id: '3', title: 'UPSC Prelims GK', subject: 'General Knowledge', date: 'Feb 4', time: '6:00 PM', students: 189 },
@@ -44,49 +38,30 @@ const TeacherDashboard: React.FC = () => {
         {/* Stats Grid */}
         <div className="grid grid-cols-2 gap-3">
           <StatCard
-            title="Total Earnings"
-            value={formatCurrency(mockStats.totalEarnings)}
+            title="Total Revenue"
+            value={formatCurrency(stats.totalEarnings)}
             icon={IndianRupee}
             variant="primary"
             trend={{ value: 12, isPositive: true }}
           />
           <StatCard
             title="Pending"
-            value={formatCurrency(mockStats.pendingEarnings)}
+            value={formatCurrency(stats.pendingEarnings)}
             icon={Clock}
             subtitle="Processing"
           />
           <StatCard
             title="Total Students"
-            value={mockStats.totalStudents.toLocaleString()}
+            value={stats.totalStudents.toLocaleString()}
             icon={Users}
             trend={{ value: 8, isPositive: true }}
           />
           <StatCard
             title="Classes Taken"
-            value={mockStats.completedClasses}
+            value={stats.completedClasses}
             icon={BookOpen}
           />
         </div>
-
-        {/* Quick Actions */}
-        <section>
-          <h2 className="text-lg font-bold text-foreground mb-3">Quick Actions</h2>
-          <div className="grid grid-cols-2 gap-3">
-            <button className="flex flex-col items-center gap-2 p-4 rounded-xl bg-card shadow-card hover:shadow-elevated transition-all active:scale-[0.98]">
-              <div className="p-3 rounded-full gradient-primary">
-                <Plus className="h-5 w-5 text-primary-foreground" />
-              </div>
-              <span className="text-sm font-medium text-foreground">New Class</span>
-            </button>
-            <button className="flex flex-col items-center gap-2 p-4 rounded-xl bg-card shadow-card hover:shadow-elevated transition-all active:scale-[0.98]">
-              <div className="p-3 rounded-full bg-accent">
-                <FileText className="h-5 w-5 text-primary" />
-              </div>
-              <span className="text-sm font-medium text-foreground">View Reports</span>
-            </button>
-          </div>
-        </section>
 
         {/* Upcoming Classes */}
         <section>
@@ -95,7 +70,7 @@ const TeacherDashboard: React.FC = () => {
             <button className="text-sm font-medium text-primary">View All</button>
           </div>
           <div className="space-y-3">
-            {mockUpcomingClasses.map((cls, index) => (
+            {upcomingClasses.map((cls, index) => (
               <div
                 key={cls.id}
                 className="p-4 rounded-xl bg-card shadow-card animate-slide-up"
@@ -133,7 +108,7 @@ const TeacherDashboard: React.FC = () => {
           </div>
         </section>
 
-        {/* Performance Card */}
+        {/* Performance Summary */}
         <section>
           <h2 className="text-lg font-bold text-foreground mb-3">This Month</h2>
           <div className="p-4 rounded-xl bg-card shadow-card">

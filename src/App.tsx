@@ -14,13 +14,15 @@ import NotFound from "./pages/NotFound";
 // Teacher Pages
 import TeacherDashboard from "./pages/teacher/TeacherDashboard";
 import TeacherClasses from "./pages/teacher/TeacherClasses";
-import TeacherEarnings from "./pages/teacher/TeacherEarnings";
+import TeacherPerformance from "./pages/teacher/TeacherPerformance";
+import TeacherRevenue from "./pages/teacher/TeacherRevenue";
 import TeacherProfile from "./pages/teacher/TeacherProfile";
 
 // Influencer Pages
 import InfluencerDashboard from "./pages/influencer/InfluencerDashboard";
-import InfluencerReferrals from "./pages/influencer/InfluencerReferrals";
-import InfluencerEarnings from "./pages/influencer/InfluencerEarnings";
+import InfluencerCoupons from "./pages/influencer/InfluencerCoupons";
+import InfluencerPerformance from "./pages/influencer/InfluencerPerformance";
+import InfluencerRevenue from "./pages/influencer/InfluencerRevenue";
 import InfluencerProfile from "./pages/influencer/InfluencerProfile";
 
 const queryClient = new QueryClient();
@@ -97,13 +99,15 @@ const AppRoutes = () => {
       {/* Teacher Routes */}
       <Route path="/teacher" element={<ProtectedRoute requiredRole="teacher"><TeacherDashboard /></ProtectedRoute>} />
       <Route path="/teacher/classes" element={<ProtectedRoute requiredRole="teacher"><TeacherClasses /></ProtectedRoute>} />
-      <Route path="/teacher/earnings" element={<ProtectedRoute requiredRole="teacher"><TeacherEarnings /></ProtectedRoute>} />
+      <Route path="/teacher/performance" element={<ProtectedRoute requiredRole="teacher"><TeacherPerformance /></ProtectedRoute>} />
+      <Route path="/teacher/revenue" element={<ProtectedRoute requiredRole="teacher"><TeacherRevenue /></ProtectedRoute>} />
       <Route path="/teacher/profile" element={<ProtectedRoute requiredRole="teacher"><TeacherProfile /></ProtectedRoute>} />
 
       {/* Influencer Routes */}
       <Route path="/influencer" element={<ProtectedRoute requiredRole="influencer"><InfluencerDashboard /></ProtectedRoute>} />
-      <Route path="/influencer/referrals" element={<ProtectedRoute requiredRole="influencer"><InfluencerReferrals /></ProtectedRoute>} />
-      <Route path="/influencer/earnings" element={<ProtectedRoute requiredRole="influencer"><InfluencerEarnings /></ProtectedRoute>} />
+      <Route path="/influencer/coupons" element={<ProtectedRoute requiredRole="influencer"><InfluencerCoupons /></ProtectedRoute>} />
+      <Route path="/influencer/performance" element={<ProtectedRoute requiredRole="influencer"><InfluencerPerformance /></ProtectedRoute>} />
+      <Route path="/influencer/revenue" element={<ProtectedRoute requiredRole="influencer"><InfluencerRevenue /></ProtectedRoute>} />
       <Route path="/influencer/profile" element={<ProtectedRoute requiredRole="influencer"><InfluencerProfile /></ProtectedRoute>} />
 
       {/* Catch-all */}
