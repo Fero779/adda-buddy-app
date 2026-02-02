@@ -77,9 +77,19 @@ Deno.serve(async (req) => {
     let isNewUser = false
 
     if (existingProfile) {
-      // Existing user
+      // Existing user - update their password to the deterministic one
       userId = existingProfile.user_id
       isNewUser = false
+      
+      // Update the user's password to ensure we can sign them in
+      const { error: updateError } = await supabase.auth.admin.updateUserById(userId, {
+        password: password
+      })
+      
+      if (updateError) {
+        console.error('Update password error:', updateError)
+        // Continue anyway - might work if password was already correct
+      }
     } else {
       // New user - create account
       isNewUser = true
