@@ -1,29 +1,30 @@
 import React from 'react';
 import { AppShell } from '@/components/layout/AppShell';
-import { IndianRupee, Clock, TrendingUp, Download, ArrowDownRight, Calendar } from 'lucide-react';
+import { IndianRupee, ShoppingCart, TrendingUp, BookOpen, Sparkles } from 'lucide-react';
 
 // Mock data - will come from API
-const revenueData = {
-  totalEarned: 485000,
-  pending: 45000,
+const revenueSummary = {
   thisMonth: 78500,
-  lastMonth: 65000,
+  ordersCount: 342,
+  growthPercent: 12,
 };
 
-const monthlyRevenue = [
-  { month: 'Oct', amount: 52000 },
-  { month: 'Nov', amount: 61000 },
-  { month: 'Dec', amount: 58000 },
-  { month: 'Jan', amount: 65000 },
-  { month: 'Feb', amount: 78500 },
+const dayWiseRevenue = [
+  { date: 'Feb 2', revenue: 8500, orders: 38 },
+  { date: 'Feb 1', revenue: 12300, orders: 52 },
+  { date: 'Jan 31', revenue: 9800, orders: 41 },
+  { date: 'Jan 30', revenue: 11200, orders: 48 },
+  { date: 'Jan 29', revenue: 7600, orders: 32 },
+  { date: 'Jan 28', revenue: 10100, orders: 44 },
+  { date: 'Jan 27', revenue: 8900, orders: 39 },
 ];
 
-const transactions = [
-  { id: '1', description: 'SSC CGL Maths Class Payout', amount: 4500, date: 'Feb 1, 2024', status: 'completed' },
-  { id: '2', description: 'Bank PO Reasoning Bonus', amount: 2000, date: 'Jan 31, 2024', status: 'completed' },
-  { id: '3', description: 'Weekly Payout', amount: 15000, date: 'Jan 28, 2024', status: 'completed' },
-  { id: '4', description: 'Performance Bonus Q4', amount: 8500, date: 'Jan 25, 2024', status: 'pending' },
-  { id: '5', description: 'Monthly Settlement', amount: 32000, date: 'Jan 20, 2024', status: 'completed' },
+const topCourses = [
+  { name: 'SSC CGL Complete Maths', revenue: 24500, rank: 1 },
+  { name: 'Bank PO Reasoning Master', revenue: 18200, rank: 2 },
+  { name: 'Railway NTPC Full Course', revenue: 15800, rank: 3 },
+  { name: 'SSC CHSL English Pro', revenue: 12100, rank: 4 },
+  { name: 'General Awareness Bundle', revenue: 7900, rank: 5 },
 ];
 
 const TeacherRevenue: React.FC = () => {
@@ -31,113 +32,109 @@ const TeacherRevenue: React.FC = () => {
     if (amount >= 100000) {
       return `₹${(amount / 100000).toFixed(2)}L`;
     }
-    return `₹${(amount / 1000).toFixed(1)}K`;
+    if (amount >= 1000) {
+      return `₹${(amount / 1000).toFixed(1)}K`;
+    }
+    return `₹${amount}`;
   };
-
-  const maxAmount = Math.max(...monthlyRevenue.map(m => m.amount));
-  const growthPercent = ((revenueData.thisMonth - revenueData.lastMonth) / revenueData.lastMonth * 100).toFixed(1);
 
   return (
     <AppShell title="Revenue">
       <div className="px-4 py-4 space-y-6">
-        {/* Total Revenue Card */}
-        <div className="p-5 rounded-2xl gradient-primary text-primary-foreground">
-          <p className="text-sm opacity-80 mb-1">Total Revenue</p>
-          <p className="text-3xl font-bold mb-3">{formatCurrency(revenueData.totalEarned)}</p>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-primary-foreground/20 text-xs">
-              <Clock className="h-3 w-3" />
-              ₹{(revenueData.pending / 1000).toFixed(0)}K pending
-            </div>
+        {/* Motivational Header */}
+        <div className="p-4 rounded-xl bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20">
+          <div className="flex items-center gap-2 text-primary">
+            <Sparkles className="h-5 w-5" />
+            <span className="text-sm font-medium">You're doing great this month! 🎉</span>
           </div>
         </div>
 
-        {/* This Month Stats */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="p-4 rounded-xl bg-card shadow-card">
-            <div className="flex items-center gap-2 mb-2">
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">This Month</span>
-            </div>
-            <p className="text-2xl font-bold text-foreground">{formatCurrency(revenueData.thisMonth)}</p>
-            <div className="flex items-center gap-1 mt-1">
-              <TrendingUp className="h-3 w-3 text-success" />
-              <span className="text-xs text-success">+{growthPercent}%</span>
-            </div>
-          </div>
-          <div className="p-4 rounded-xl bg-card shadow-card">
-            <div className="flex items-center gap-2 mb-2">
-              <Clock className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">Pending</span>
-            </div>
-            <p className="text-2xl font-bold text-foreground">{formatCurrency(revenueData.pending)}</p>
-            <span className="text-xs text-muted-foreground">Processing</span>
-          </div>
-        </div>
-
-        {/* Monthly Chart */}
+        {/* Revenue Summary */}
         <section>
-          <h2 className="text-lg font-bold text-foreground mb-3">Monthly Revenue</h2>
-          <div className="p-4 rounded-xl bg-card shadow-card">
-            <div className="flex items-end justify-between h-32 gap-2 mb-4">
-              {monthlyRevenue.map((item, index) => (
-                <div key={item.month} className="flex-1 flex flex-col items-center gap-2">
-                  <div
-                    className={`w-full rounded-t-md ${
-                      index === monthlyRevenue.length - 1 ? 'gradient-primary' : 'bg-muted'
-                    }`}
-                    style={{ height: `${(item.amount / maxAmount) * 100}%` }}
-                  />
-                  <span className="text-xs text-muted-foreground">{item.month}</span>
-                </div>
-              ))}
+          <h2 className="text-lg font-bold text-foreground mb-3">This Month</h2>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="p-5 rounded-2xl gradient-primary text-primary-foreground">
+              <div className="flex items-center gap-2 mb-2">
+                <IndianRupee className="h-4 w-4 opacity-80" />
+                <span className="text-sm opacity-80">Revenue</span>
+              </div>
+              <p className="text-3xl font-bold">{formatCurrency(revenueSummary.thisMonth)}</p>
+              <div className="flex items-center gap-1 mt-2">
+                <TrendingUp className="h-3.5 w-3.5" />
+                <span className="text-xs opacity-90">+{revenueSummary.growthPercent}% vs last month</span>
+              </div>
             </div>
-            <div className="flex items-center justify-center gap-2 pt-3 border-t border-border">
-              <TrendingUp className="h-4 w-4 text-success" />
-              <span className="text-sm text-muted-foreground">
-                <span className="font-semibold text-success">+{growthPercent}%</span> from last month
-              </span>
+            <div className="p-5 rounded-2xl bg-card shadow-card">
+              <div className="flex items-center gap-2 mb-2">
+                <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">Orders</span>
+              </div>
+              <p className="text-3xl font-bold text-foreground">{revenueSummary.ordersCount}</p>
+              <p className="text-xs text-muted-foreground mt-2">Total purchases</p>
             </div>
           </div>
         </section>
 
-        {/* Transactions */}
+        {/* Day-wise Revenue */}
         <section>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-bold text-foreground">Recent Transactions</h2>
-            <button className="flex items-center gap-1 text-sm font-medium text-primary">
-              <Download className="h-4 w-4" />
-              Export
-            </button>
-          </div>
-          <div className="space-y-3">
-            {transactions.map((tx, index) => (
+          <h2 className="text-lg font-bold text-foreground mb-3">Day-wise Revenue</h2>
+          <div className="rounded-xl bg-card shadow-card overflow-hidden">
+            {dayWiseRevenue.map((day, index) => (
               <div
-                key={tx.id}
-                className="p-4 rounded-xl bg-card shadow-card animate-slide-up"
-                style={{ animationDelay: `${index * 0.05}s` }}
+                key={day.date}
+                className={`flex items-center justify-between p-4 ${
+                  index !== dayWiseRevenue.length - 1 ? 'border-b border-border' : ''
+                }`}
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-success/10">
-                      <ArrowDownRight className="h-4 w-4 text-success" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-foreground text-sm">{tx.description}</p>
-                      <p className="text-xs text-muted-foreground">{tx.date}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-semibold text-success">+₹{tx.amount.toLocaleString()}</p>
-                    {tx.status === 'pending' && (
-                      <span className="text-xs text-warning">Pending</span>
-                    )}
-                  </div>
+                <div>
+                  <p className="font-medium text-foreground">{day.date}</p>
+                  <p className="text-xs text-muted-foreground">{day.orders} orders</p>
                 </div>
+                <p className="font-semibold text-success">₹{day.revenue.toLocaleString()}</p>
               </div>
             ))}
           </div>
         </section>
+
+        {/* Top Selling Courses */}
+        <section>
+          <h2 className="text-lg font-bold text-foreground mb-3">Top Selling Courses</h2>
+          <div className="space-y-3">
+            {topCourses.map((course, index) => (
+              <div
+                key={course.name}
+                className="flex items-center gap-3 p-4 rounded-xl bg-card shadow-card animate-slide-up"
+                style={{ animationDelay: `${index * 0.05}s` }}
+              >
+                <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
+                  course.rank === 1 
+                    ? 'bg-warning/20 text-warning' 
+                    : course.rank === 2 
+                    ? 'bg-muted text-muted-foreground' 
+                    : course.rank === 3 
+                    ? 'bg-orange-100 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400'
+                    : 'bg-muted/50 text-muted-foreground'
+                }`}>
+                  {course.rank}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <BookOpen className="h-4 w-4 text-primary flex-shrink-0" />
+                    <p className="font-medium text-foreground truncate">{course.name}</p>
+                  </div>
+                </div>
+                <p className="font-semibold text-foreground flex-shrink-0">{formatCurrency(course.revenue)}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Motivational Footer */}
+        <div className="p-4 rounded-xl bg-muted/50 border border-border text-center">
+          <p className="text-sm text-muted-foreground">
+            💪 Keep creating great content to grow your revenue!
+          </p>
+        </div>
       </div>
     </AppShell>
   );
