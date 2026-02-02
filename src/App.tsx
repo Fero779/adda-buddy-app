@@ -3,10 +3,12 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { UserProvider, useUser } from "@/contexts/UserContext";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { Loader2 } from "lucide-react";
 
 // Pages
-import Onboarding from "./pages/Onboarding";
+import Login from "./pages/Login";
+import RoleSelection from "./pages/RoleSelection";
 import NotFound from "./pages/NotFound";
 
 // Teacher Pages
@@ -23,39 +25,74 @@ import InfluencerProfile from "./pages/influencer/InfluencerProfile";
 
 const queryClient = new QueryClient();
 
-const ProtectedRoute: React.FC<{ children: React.ReactNode; requiredRole?: 'teacher' | 'influencer' }> = ({ 
-  children, 
-  requiredRole 
-}) => {
-  const { user, isOnboarded } = useUser();
-  
-  if (!isOnboarded || !user) {
-    return <Navigate to="/" replace />;
+const LoadingScreen = () => (
+  <div className="min-h-screen bg-background flex items-center justify-center">
+    <div className="flex flex-col items-center gap-4">
+      <div className="h-16 w-16 rounded-2xl gradient-primary flex items-center justify-center animate-pulse">
+        <span className="text-3xl font-black text-primary-foreground">A</span>
+      </div>
+      <Loader2 className="h-6 w-6 animate-spin text-primary" />
+    </div>
+  </div>
+);
+
+const ProtectedRoute: React.FC<{ 
+  children: React.ReactNode; 
+  requiredRole?: 'teacher' | 'influencer' 
+}> = ({ children, requiredRole }) => {
+  const { user, profile, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <LoadingScreen />;
   }
-  
-  if (requiredRole && user.role !== requiredRole) {
-    return <Navigate to={`/${user.role}`} replace />;
+
+  // Not logged in
+  if (!user) {
+    return <Navigate to="/login" replace />;
   }
-  
+
+  // Logged in but not onboarded
+  if (!profile?.onboarded || !profile?.role) {
+    return <Navigate to="/role-selection" replace />;
+  }
+
+  // Check role requirement
+  if (requiredRole && profile.role !== requiredRole) {
+    return <Navigate to={`/${profile.role}`} replace />;
+  }
+
+  return <>{children}</>;
+};
+
+const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, profile, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
+
+  // Already logged in and onboarded - redirect to dashboard
+  if (user && profile?.onboarded && profile?.role) {
+    return <Navigate to={`/${profile.role}`} replace />;
+  }
+
+  // Logged in but not onboarded - redirect to role selection
+  if (user && (!profile?.onboarded || !profile?.role)) {
+    return <Navigate to="/role-selection" replace />;
+  }
+
   return <>{children}</>;
 };
 
 const AppRoutes = () => {
-  const { isOnboarded, user } = useUser();
-
   return (
     <Routes>
-      {/* Onboarding / Landing */}
-      <Route 
-        path="/" 
-        element={
-          isOnboarded && user ? (
-            <Navigate to={`/${user.role}`} replace />
-          ) : (
-            <Onboarding />
-          )
-        } 
-      />
+      {/* Public Routes */}
+      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+      
+      {/* Semi-protected: needs auth but not role */}
+      <Route path="/role-selection" element={<RoleSelection />} />
 
       {/* Teacher Routes */}
       <Route path="/teacher" element={<ProtectedRoute requiredRole="teacher"><TeacherDashboard /></ProtectedRoute>} />
@@ -80,11 +117,11 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <UserProvider>
+      <AuthProvider>
         <BrowserRouter>
           <AppRoutes />
         </BrowserRouter>
-      </UserProvider>
+      </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
