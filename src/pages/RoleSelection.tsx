@@ -4,6 +4,7 @@ import { GraduationCap, Megaphone, Loader2, CheckCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
 
 type Role = 'teacher' | 'influencer';
 
@@ -31,6 +32,7 @@ const roleOptions: RoleOption[] = [
 
 const RoleSelection: React.FC = () => {
   const navigate = useNavigate();
+  const { refreshProfile } = useAuth();
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
@@ -106,8 +108,12 @@ const RoleSelection: React.FC = () => {
       if (error) throw error;
 
       if (data.success) {
+        // CRITICAL: Refresh the profile in AuthContext before navigating
+        // This ensures ProtectedRoute sees the updated onboarded/role state
+        await refreshProfile();
+        
         toast.success(`Welcome! You're now registered as a ${selectedRole}`);
-        navigate(`/${selectedRole}`);
+        navigate(`/${selectedRole}`, { replace: true });
       } else {
         throw new Error(data.error || 'Failed to save role');
       }
