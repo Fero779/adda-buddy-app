@@ -1,167 +1,206 @@
 import React from 'react';
 import { AppShell } from '@/components/layout/AppShell';
-import { TrendingUp, TrendingDown, Users, Clock, Star, Target, Award } from 'lucide-react';
+import { TrendingUp, TrendingDown, Eye, Users, Clock, Percent, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
 
 // Mock data - will come from API
-const performanceData = {
-  overallScore: 94.2,
-  rank: 'Top 5%',
-  totalStudents: 2840,
-  avgRating: 4.9,
-  avgClassDuration: 78,
-  completionRate: 98.5,
-  monthlyTrend: +12,
+const engagementMetrics = {
+  avgViews: { value: 1240, trend: 8, unit: '' },
+  peakViewers: { value: 2180, trend: 15, unit: '' },
+  avgWatchTime: { value: 42, trend: -3, unit: 'min' },
+  retention: { value: 78, trend: 5, unit: '%' },
 };
 
-const weeklyStats = [
-  { day: 'Mon', classes: 3, students: 890 },
-  { day: 'Tue', classes: 2, students: 620 },
-  { day: 'Wed', classes: 4, students: 1100 },
-  { day: 'Thu', classes: 2, students: 540 },
-  { day: 'Fri', classes: 3, students: 780 },
-  { day: 'Sat', classes: 1, students: 320 },
-  { day: 'Sun', classes: 0, students: 0 },
-];
+const operationalMetrics = {
+  onTime: { value: 96, trend: 2, unit: '%' },
+  cancelled: { value: 2, trend: -1, unit: '%' },
+  rescheduled: { value: 4, trend: 0, unit: '%' },
+};
+
+interface MetricCardProps {
+  icon: React.ReactNode;
+  label: string;
+  value: number;
+  unit: string;
+  trend: number;
+  iconBg: string;
+  isNegativeGood?: boolean;
+}
+
+const MetricCard: React.FC<MetricCardProps> = ({ icon, label, value, unit, trend, iconBg, isNegativeGood = false }) => {
+  // For metrics like "cancelled %", a negative trend is good
+  const isPositive = isNegativeGood ? trend <= 0 : trend >= 0;
+  const showTrend = trend !== 0;
+  
+  return (
+    <div className="p-4 rounded-xl bg-card shadow-card">
+      <div className="flex items-center gap-2 mb-3">
+        <div className={`p-2 rounded-lg ${iconBg}`}>
+          {icon}
+        </div>
+        <span className="text-sm text-muted-foreground">{label}</span>
+      </div>
+      <div className="flex items-end justify-between">
+        <p className="text-2xl font-bold text-foreground">
+          {value.toLocaleString()}{unit}
+        </p>
+        {showTrend && (
+          <div className={`flex items-center gap-0.5 text-xs font-medium ${
+            isPositive ? 'text-success' : 'text-destructive'
+          }`}>
+            {trend > 0 ? (
+              <TrendingUp className="h-3.5 w-3.5" />
+            ) : (
+              <TrendingDown className="h-3.5 w-3.5" />
+            )}
+            <span>{Math.abs(trend)}%</span>
+          </div>
+        )}
+        {!showTrend && (
+          <span className="text-xs text-muted-foreground">No change</span>
+        )}
+      </div>
+    </div>
+  );
+};
 
 const TeacherPerformance: React.FC = () => {
-  const maxStudents = Math.max(...weeklyStats.map(s => s.students));
-
   return (
     <AppShell title="Performance">
       <div className="px-4 py-4 space-y-6">
-        {/* Overall Score Card */}
-        <div className="p-5 rounded-2xl gradient-primary text-primary-foreground">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <p className="text-sm opacity-80">Performance Score</p>
-              <p className="text-4xl font-bold">{performanceData.overallScore}%</p>
-            </div>
-            <div className="p-3 rounded-xl bg-primary-foreground/20">
-              <Award className="h-8 w-8" />
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="px-2 py-1 rounded-full bg-primary-foreground/20 text-xs font-medium">
-              {performanceData.rank}
-            </span>
-            <span className="flex items-center gap-1 text-sm">
-              {performanceData.monthlyTrend > 0 ? (
-                <>
-                  <TrendingUp className="h-4 w-4" />
-                  +{performanceData.monthlyTrend}% this month
-                </>
-              ) : (
-                <>
-                  <TrendingDown className="h-4 w-4" />
-                  {performanceData.monthlyTrend}% this month
-                </>
-              )}
-            </span>
-          </div>
+        {/* Period indicator */}
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">vs. previous 30 days</p>
         </div>
 
-        {/* Key Metrics */}
+        {/* Engagement Section */}
         <section>
-          <h2 className="text-lg font-bold text-foreground mb-3">Key Metrics</h2>
+          <h2 className="text-lg font-bold text-foreground mb-3">Engagement</h2>
           <div className="grid grid-cols-2 gap-3">
-            <div className="p-4 rounded-xl bg-card shadow-card">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="p-2 rounded-lg bg-accent">
-                  <Users className="h-4 w-4 text-primary" />
-                </div>
-                <span className="text-sm text-muted-foreground">Total Students</span>
-              </div>
-              <p className="text-2xl font-bold text-foreground">{performanceData.totalStudents.toLocaleString()}</p>
-            </div>
-            
-            <div className="p-4 rounded-xl bg-card shadow-card">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="p-2 rounded-lg bg-warning/10">
-                  <Star className="h-4 w-4 text-warning" />
-                </div>
-                <span className="text-sm text-muted-foreground">Avg Rating</span>
-              </div>
-              <p className="text-2xl font-bold text-foreground">{performanceData.avgRating}</p>
-            </div>
-            
-            <div className="p-4 rounded-xl bg-card shadow-card">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="p-2 rounded-lg bg-accent">
-                  <Clock className="h-4 w-4 text-primary" />
-                </div>
-                <span className="text-sm text-muted-foreground">Avg Duration</span>
-              </div>
-              <p className="text-2xl font-bold text-foreground">{performanceData.avgClassDuration} min</p>
-            </div>
-            
-            <div className="p-4 rounded-xl bg-card shadow-card">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="p-2 rounded-lg bg-success/10">
-                  <Target className="h-4 w-4 text-success" />
-                </div>
-                <span className="text-sm text-muted-foreground">Completion</span>
-              </div>
-              <p className="text-2xl font-bold text-foreground">{performanceData.completionRate}%</p>
-            </div>
+            <MetricCard
+              icon={<Eye className="h-4 w-4 text-primary" />}
+              iconBg="bg-primary/10"
+              label="Avg Views/Class"
+              value={engagementMetrics.avgViews.value}
+              unit={engagementMetrics.avgViews.unit}
+              trend={engagementMetrics.avgViews.trend}
+            />
+            <MetricCard
+              icon={<Users className="h-4 w-4 text-accent-foreground" />}
+              iconBg="bg-accent"
+              label="Peak Concurrent"
+              value={engagementMetrics.peakViewers.value}
+              unit={engagementMetrics.peakViewers.unit}
+              trend={engagementMetrics.peakViewers.trend}
+            />
+            <MetricCard
+              icon={<Clock className="h-4 w-4 text-warning" />}
+              iconBg="bg-warning/10"
+              label="Avg Watch Time"
+              value={engagementMetrics.avgWatchTime.value}
+              unit={engagementMetrics.avgWatchTime.unit}
+              trend={engagementMetrics.avgWatchTime.trend}
+            />
+            <MetricCard
+              icon={<Percent className="h-4 w-4 text-success" />}
+              iconBg="bg-success/10"
+              label="Retention"
+              value={engagementMetrics.retention.value}
+              unit={engagementMetrics.retention.unit}
+              trend={engagementMetrics.retention.trend}
+            />
           </div>
         </section>
 
-        {/* Weekly Activity Chart */}
+        {/* Operational Hygiene Section */}
         <section>
-          <h2 className="text-lg font-bold text-foreground mb-3">This Week</h2>
-          <div className="p-4 rounded-xl bg-card shadow-card">
-            <div className="flex items-end justify-between h-32 gap-2 mb-4">
-              {weeklyStats.map((stat, index) => (
-                <div key={stat.day} className="flex-1 flex flex-col items-center gap-2">
-                  <div
-                    className={`w-full rounded-t-md transition-all ${
-                      stat.students > 0 ? 'gradient-primary' : 'bg-muted'
-                    }`}
-                    style={{ 
-                      height: stat.students > 0 ? `${(stat.students / maxStudents) * 100}%` : '8px',
-                      minHeight: '8px'
-                    }}
-                  />
-                  <span className="text-xs text-muted-foreground">{stat.day}</span>
-                </div>
-              ))}
-            </div>
-            <div className="flex items-center justify-between pt-3 border-t border-border">
-              <div>
-                <p className="text-xs text-muted-foreground">Total Classes</p>
-                <p className="text-lg font-bold text-foreground">
-                  {weeklyStats.reduce((sum, s) => sum + s.classes, 0)}
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="text-xs text-muted-foreground">Total Students</p>
-                <p className="text-lg font-bold text-foreground">
-                  {weeklyStats.reduce((sum, s) => sum + s.students, 0).toLocaleString()}
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Achievements */}
-        <section>
-          <h2 className="text-lg font-bold text-foreground mb-3">Recent Achievements</h2>
+          <h2 className="text-lg font-bold text-foreground mb-3">Operational Hygiene</h2>
           <div className="space-y-3">
-            {[
-              { icon: '🏆', title: 'Top Performer', desc: 'Ranked in top 5% this month' },
-              { icon: '⭐', title: '5-Star Streak', desc: '10 consecutive 5-star ratings' },
-              { icon: '🎯', title: '100% Attendance', desc: 'No missed classes this week' },
-            ].map((achievement, index) => (
-              <div key={index} className="flex items-center gap-3 p-3 rounded-xl bg-card shadow-card">
-                <span className="text-2xl">{achievement.icon}</span>
-                <div>
-                  <p className="font-medium text-foreground">{achievement.title}</p>
-                  <p className="text-xs text-muted-foreground">{achievement.desc}</p>
+            <div className="p-4 rounded-xl bg-card shadow-card">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-success/10">
+                    <CheckCircle className="h-4 w-4 text-success" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">On-time Start</p>
+                    <p className="text-xl font-bold text-foreground">{operationalMetrics.onTime.value}%</p>
+                  </div>
+                </div>
+                {operationalMetrics.onTime.trend !== 0 && (
+                  <div className={`flex items-center gap-0.5 text-sm font-medium ${
+                    operationalMetrics.onTime.trend > 0 ? 'text-success' : 'text-destructive'
+                  }`}>
+                    {operationalMetrics.onTime.trend > 0 ? (
+                      <TrendingUp className="h-4 w-4" />
+                    ) : (
+                      <TrendingDown className="h-4 w-4" />
+                    )}
+                    <span>{Math.abs(operationalMetrics.onTime.trend)}%</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-4 rounded-xl bg-card shadow-card">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="p-2 rounded-lg bg-destructive/10">
+                    <XCircle className="h-4 w-4 text-destructive" />
+                  </div>
+                  <span className="text-sm text-muted-foreground">Cancelled</span>
+                </div>
+                <div className="flex items-end justify-between">
+                  <p className="text-xl font-bold text-foreground">{operationalMetrics.cancelled.value}%</p>
+                  {operationalMetrics.cancelled.trend !== 0 && (
+                    <div className={`flex items-center gap-0.5 text-xs font-medium ${
+                      operationalMetrics.cancelled.trend < 0 ? 'text-success' : 'text-destructive'
+                    }`}>
+                      {operationalMetrics.cancelled.trend > 0 ? (
+                        <TrendingUp className="h-3.5 w-3.5" />
+                      ) : (
+                        <TrendingDown className="h-3.5 w-3.5" />
+                      )}
+                      <span>{Math.abs(operationalMetrics.cancelled.trend)}%</span>
+                    </div>
+                  )}
                 </div>
               </div>
-            ))}
+
+              <div className="p-4 rounded-xl bg-card shadow-card">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="p-2 rounded-lg bg-warning/10">
+                    <RefreshCw className="h-4 w-4 text-warning" />
+                  </div>
+                  <span className="text-sm text-muted-foreground">Rescheduled</span>
+                </div>
+                <div className="flex items-end justify-between">
+                  <p className="text-xl font-bold text-foreground">{operationalMetrics.rescheduled.value}%</p>
+                  {operationalMetrics.rescheduled.trend !== 0 ? (
+                    <div className={`flex items-center gap-0.5 text-xs font-medium ${
+                      operationalMetrics.rescheduled.trend < 0 ? 'text-success' : 'text-destructive'
+                    }`}>
+                      {operationalMetrics.rescheduled.trend > 0 ? (
+                        <TrendingUp className="h-3.5 w-3.5" />
+                      ) : (
+                        <TrendingDown className="h-3.5 w-3.5" />
+                      )}
+                      <span>{Math.abs(operationalMetrics.rescheduled.trend)}%</span>
+                    </div>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">No change</span>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         </section>
+
+        {/* Summary insight */}
+        <div className="p-4 rounded-xl bg-muted/50 border border-border">
+          <p className="text-sm text-muted-foreground text-center">
+            📊 Your engagement is up and operational hygiene is strong. Keep it up!
+          </p>
+        </div>
       </div>
     </AppShell>
   );
