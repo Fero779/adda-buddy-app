@@ -120,22 +120,17 @@ const Login: React.FC = () => {
 
       if (error) throw error;
 
-      if (data.success) {
-        // Sign in using the magic link token
-        if (data.token_hash) {
-          const email = `${fullPhone.replace(/[^0-9]/g, '')}@phone.adda247.app`;
-          
-          const { error: verifyError } = await supabase.auth.verifyOtp({
-            email: email,
-            token: data.token_hash,
-            type: 'magiclink'
-          });
+      if (data.success && data.session) {
+        // Set the session directly from the edge function response
+        const { error: sessionError } = await supabase.auth.setSession({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token
+        });
 
-          if (verifyError) {
-            console.error('Verify OTP error:', verifyError);
-            // Try alternative sign-in approach
-            await handleAlternativeSignIn(data.user);
-          }
+        if (sessionError) {
+          console.error('Session error:', sessionError);
+          toast.error('Failed to establish session');
+          return;
         }
 
         toast.success('Login successful!');
@@ -155,11 +150,6 @@ const Login: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleAlternativeSignIn = async (userData: any) => {
-    // Store user data in session storage as fallback
-    sessionStorage.setItem('pendingUser', JSON.stringify(userData));
   };
 
   const handleResendOtp = () => {
