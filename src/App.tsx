@@ -10,6 +10,7 @@ import { Loader2 } from "lucide-react";
 import Login from "./pages/Login";
 import RoleSelection from "./pages/RoleSelection";
 import NotFound from "./pages/NotFound";
+import AdminLogin from "./pages/AdminLogin";
 
 // Teacher Pages
 import TeacherDashboard from "./pages/teacher/TeacherDashboard";
@@ -92,6 +93,7 @@ const AppRoutes = () => {
       {/* Public Routes */}
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+      <Route path="/admin/login" element={<AdminLogin />} />
       
       {/* Semi-protected: needs auth but not role */}
       <Route path="/role-selection" element={<RoleSelection />} />

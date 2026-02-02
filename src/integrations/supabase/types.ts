@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_sessions: {
+        Row: {
+          activated_at: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          pc_id: string
+          session_token: string
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          activated_at?: string | null
+          created_at?: string
+          expires_at: string
+          id?: string
+          pc_id?: string
+          session_token: string
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          activated_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          pc_id?: string
+          session_token?: string
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       phone_otps: {
         Row: {
           created_at: string

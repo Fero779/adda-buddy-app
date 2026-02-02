@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -11,13 +11,16 @@ import {
   ChevronRight,
   Star,
   Award,
-  BookOpen
+  BookOpen,
+  QrCode
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { QRScanner } from '@/components/QRScanner';
 
 const TeacherProfile: React.FC = () => {
   const { profile, signOut } = useAuth();
   const navigate = useNavigate();
+  const [showQRScanner, setShowQRScanner] = useState(false);
 
   const handleLogout = async () => {
     await signOut();
@@ -75,6 +78,21 @@ const TeacherProfile: React.FC = () => {
           </div>
         </div>
 
+        {/* QR Login Button */}
+        <button
+          onClick={() => setShowQRScanner(true)}
+          className="w-full flex items-center gap-4 p-4 rounded-xl gradient-primary shadow-card hover:opacity-90 transition-opacity active:scale-[0.99]"
+        >
+          <div className="p-2 rounded-lg bg-white/20">
+            <QrCode className="h-5 w-5 text-primary-foreground" />
+          </div>
+          <div className="flex-1 text-left">
+            <span className="font-semibold text-primary-foreground">Scan QR to Login PC</span>
+            <p className="text-xs text-primary-foreground/80">Access your dashboard on desktop</p>
+          </div>
+          <ChevronRight className="h-5 w-5 text-primary-foreground" />
+        </button>
+
         {/* Menu Items */}
         <div className="space-y-2">
           {menuItems.map((item, index) => (
@@ -108,6 +126,14 @@ const TeacherProfile: React.FC = () => {
           Adda247 Partner App v1.0.0
         </p>
       </div>
+
+      {/* QR Scanner Modal */}
+      {showQRScanner && (
+        <QRScanner
+          onClose={() => setShowQRScanner(false)}
+          onSuccess={() => setShowQRScanner(false)}
+        />
+      )}
     </AppShell>
   );
 };
