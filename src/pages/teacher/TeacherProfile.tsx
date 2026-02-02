@@ -12,7 +12,8 @@ import {
   Star,
   Award,
   BookOpen,
-  QrCode
+  QrCode,
+  RefreshCw
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { QRScanner } from '@/components/QRScanner';
@@ -29,6 +30,7 @@ const TeacherProfile: React.FC = () => {
   };
 
   const menuItems = [
+    { icon: RefreshCw, label: 'Change Role', onClick: () => navigate('/role-selection?edit=1') },
     { icon: User, label: 'Edit Profile', onClick: () => {} },
     { icon: Settings, label: 'Settings', onClick: () => {} },
     { icon: FileText, label: 'Documents', onClick: () => {} },
