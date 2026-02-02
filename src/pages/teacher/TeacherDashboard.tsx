@@ -1,30 +1,44 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AppShell } from '@/components/layout/AppShell';
-import { StatCard } from '@/components/ui/stat-card';
+import { useAuth } from '@/contexts/AuthContext';
 import { 
-  IndianRupee, 
-  Users, 
-  BookOpen, 
-  Calendar, 
-  TrendingUp,
-  Clock
+  Star, 
+  Clock, 
+  XCircle, 
+  FileText,
+  Video,
+  IndianRupee,
+  ChevronRight,
+  Calendar
 } from 'lucide-react';
 
 // Mock data - will come from API
-const stats = {
-  totalEarnings: 485000,
-  pendingEarnings: 45000,
-  totalStudents: 2840,
-  completedClasses: 148,
+const teacherData = {
+  name: 'Rahul Sharma',
+  rating: 4.8,
+  onTimePercent: 96,
+  cancelledPercent: 2,
+  pdfsUploadedPercent: 88,
 };
 
-const upcomingClasses = [
-  { id: '1', title: 'SSC CGL Maths', subject: 'Mathematics', date: 'Today', time: '4:00 PM', students: 342 },
-  { id: '2', title: 'Bank PO Reasoning', subject: 'Reasoning', date: 'Tomorrow', time: '10:00 AM', students: 256 },
-  { id: '3', title: 'UPSC Prelims GK', subject: 'General Knowledge', date: 'Feb 4', time: '6:00 PM', students: 189 },
-];
+const todayData = {
+  classesToday: 3,
+  nextClassTime: '4:00 PM',
+  nextClassTitle: 'SSC CGL Maths',
+};
+
+const revenueData = {
+  thisMonthRevenue: 78500,
+  ordersCount: 156,
+};
 
 const TeacherDashboard: React.FC = () => {
+  const navigate = useNavigate();
+  const { profile } = useAuth();
+
+  const displayName = profile?.name || teacherData.name;
+
   const formatCurrency = (amount: number) => {
     if (amount >= 100000) {
       return `₹${(amount / 100000).toFixed(1)}L`;
@@ -34,101 +48,103 @@ const TeacherDashboard: React.FC = () => {
 
   return (
     <AppShell showGreeting>
-      <div className="px-4 py-4 space-y-6">
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 gap-3">
-          <StatCard
-            title="Total Revenue"
-            value={formatCurrency(stats.totalEarnings)}
-            icon={IndianRupee}
-            variant="primary"
-            trend={{ value: 12, isPositive: true }}
-          />
-          <StatCard
-            title="Pending"
-            value={formatCurrency(stats.pendingEarnings)}
-            icon={Clock}
-            subtitle="Processing"
-          />
-          <StatCard
-            title="Total Students"
-            value={stats.totalStudents.toLocaleString()}
-            icon={Users}
-            trend={{ value: 8, isPositive: true }}
-          />
-          <StatCard
-            title="Classes Taken"
-            value={stats.completedClasses}
-            icon={BookOpen}
-          />
+      <div className="px-4 py-4 space-y-4">
+        {/* Teacher Header Card */}
+        <div className="p-5 rounded-2xl bg-card shadow-card">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="h-14 w-14 rounded-full gradient-primary flex items-center justify-center">
+              <span className="text-xl font-bold text-primary-foreground">
+                {displayName.split(' ').map(n => n[0]).join('')}
+              </span>
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-foreground">{displayName}</h2>
+              <div className="flex items-center gap-1">
+                <Star className="h-4 w-4 text-warning fill-warning" />
+                <span className="font-semibold text-foreground">{teacherData.rating}</span>
+                <span className="text-sm text-muted-foreground">rating</span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-3 gap-3">
+            <div className="p-3 rounded-xl bg-success/10 text-center">
+              <div className="flex items-center justify-center gap-1 mb-1">
+                <Clock className="h-4 w-4 text-success" />
+              </div>
+              <p className="text-lg font-bold text-foreground">{teacherData.onTimePercent}%</p>
+              <p className="text-xs text-muted-foreground">On-time</p>
+            </div>
+            <div className="p-3 rounded-xl bg-destructive/10 text-center">
+              <div className="flex items-center justify-center gap-1 mb-1">
+                <XCircle className="h-4 w-4 text-destructive" />
+              </div>
+              <p className="text-lg font-bold text-foreground">{teacherData.cancelledPercent}%</p>
+              <p className="text-xs text-muted-foreground">Cancelled</p>
+            </div>
+            <div className="p-3 rounded-xl bg-accent text-center">
+              <div className="flex items-center justify-center gap-1 mb-1">
+                <FileText className="h-4 w-4 text-primary" />
+              </div>
+              <p className="text-lg font-bold text-foreground">{teacherData.pdfsUploadedPercent}%</p>
+              <p className="text-xs text-muted-foreground">PDFs</p>
+            </div>
+          </div>
         </div>
 
-        {/* Upcoming Classes */}
-        <section>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-bold text-foreground">Upcoming Classes</h2>
-            <button className="text-sm font-medium text-primary">View All</button>
+        {/* Today Snapshot Card */}
+        <div className="p-5 rounded-2xl bg-card shadow-card">
+          <div className="flex items-center gap-2 mb-4">
+            <Calendar className="h-5 w-5 text-primary" />
+            <h3 className="text-base font-bold text-foreground">Today</h3>
           </div>
-          <div className="space-y-3">
-            {upcomingClasses.map((cls, index) => (
-              <div
-                key={cls.id}
-                className="p-4 rounded-xl bg-card shadow-card animate-slide-up"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-foreground">{cls.title}</h3>
-                    <p className="text-sm text-muted-foreground mt-0.5">{cls.subject}</p>
-                    <div className="flex items-center gap-3 mt-2">
-                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <Calendar className="h-3.5 w-3.5" />
-                        {cls.date}
-                      </span>
-                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <Clock className="h-3.5 w-3.5" />
-                        {cls.time}
-                      </span>
-                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <Users className="h-3.5 w-3.5" />
-                        {cls.students}
-                      </span>
-                    </div>
-                  </div>
-                  <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${
-                    cls.date === 'Today' 
-                      ? 'bg-primary text-primary-foreground' 
-                      : 'bg-accent text-accent-foreground'
-                  }`}>
-                    {cls.date === 'Today' ? 'Live Soon' : cls.date}
-                  </span>
-                </div>
-              </div>
-            ))}
+          
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p className="text-3xl font-bold text-foreground">{todayData.classesToday}</p>
+              <p className="text-sm text-muted-foreground">Classes scheduled</p>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-muted-foreground">Next class at</p>
+              <p className="text-xl font-bold text-primary">{todayData.nextClassTime}</p>
+              <p className="text-xs text-muted-foreground">{todayData.nextClassTitle}</p>
+            </div>
           </div>
-        </section>
 
-        {/* Performance Summary */}
-        <section>
-          <h2 className="text-lg font-bold text-foreground mb-3">This Month</h2>
-          <div className="p-4 rounded-xl bg-card shadow-card">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2.5 rounded-lg bg-success/10">
-                <TrendingUp className="h-5 w-5 text-success" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Performance Score</p>
-                <p className="text-2xl font-bold text-foreground">94.2%</p>
-              </div>
-            </div>
-            <div className="h-2 bg-muted rounded-full overflow-hidden">
-              <div className="h-full w-[94%] gradient-primary rounded-full" />
-            </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              You're in the top 5% of teachers this month!
-            </p>
+          <button 
+            className="w-full py-3 rounded-xl gradient-primary text-primary-foreground font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity active:scale-[0.98]"
+          >
+            <Video className="h-5 w-5" />
+            Join Next Class
+          </button>
+        </div>
+
+        {/* Revenue Snapshot Card */}
+        <div className="p-5 rounded-2xl bg-card shadow-card">
+          <div className="flex items-center gap-2 mb-4">
+            <IndianRupee className="h-5 w-5 text-primary" />
+            <h3 className="text-base font-bold text-foreground">This Month</h3>
           </div>
-        </section>
+          
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p className="text-3xl font-bold text-foreground">{formatCurrency(revenueData.thisMonthRevenue)}</p>
+              <p className="text-sm text-muted-foreground">Revenue earned</p>
+            </div>
+            <div className="text-right">
+              <p className="text-2xl font-bold text-foreground">{revenueData.ordersCount}</p>
+              <p className="text-sm text-muted-foreground">Orders</p>
+            </div>
+          </div>
+
+          <button 
+            onClick={() => navigate('/teacher/revenue')}
+            className="w-full py-3 rounded-xl bg-accent text-foreground font-semibold flex items-center justify-center gap-2 hover:bg-accent/80 transition-colors active:scale-[0.98]"
+          >
+            View Revenue
+            <ChevronRight className="h-5 w-5" />
+          </button>
+        </div>
       </div>
     </AppShell>
   );
