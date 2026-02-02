@@ -31,6 +31,8 @@ Deno.serve(async (req) => {
       )
     }
 
+    const normalizedPhone = String(phone).replace(/\s/g, '')
+
     // Create Supabase client with service role
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
@@ -38,39 +40,57 @@ Deno.serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    // Verify OTP
+    // Verify OTP (do NOT mark as verified until we successfully create a session)
     const { data: otpData, error: otpError } = await supabase
       .from('phone_otps')
       .select('*')
-      .eq('phone', phone)
+      .eq('phone', normalizedPhone)
       .eq('otp', otp)
       .eq('verified', false)
       .gt('expires_at', new Date().toISOString())
-      .single()
+      .maybeSingle()
 
-    if (otpError || !otpData) {
-      console.log('OTP verification failed:', otpError)
+    if (otpError) {
+      console.log('OTP verification error:', otpError)
+      return new Response(
+        JSON.stringify({ error: 'Failed to verify OTP' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    if (!otpData) {
+      // Helpful message when user tries to reuse an OTP that was already accepted
+      const { data: usedOtp } = await supabase
+        .from('phone_otps')
+        .select('id')
+        .eq('phone', normalizedPhone)
+        .eq('otp', otp)
+        .eq('verified', true)
+        .gt('expires_at', new Date().toISOString())
+        .maybeSingle()
+
+      if (usedOtp) {
+        return new Response(
+          JSON.stringify({ error: 'OTP already used. Please request a new OTP.' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
       return new Response(
         JSON.stringify({ error: 'Invalid or expired OTP' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    // Mark OTP as verified
-    await supabase
-      .from('phone_otps')
-      .update({ verified: true })
-      .eq('id', otpData.id)
-
     // Generate email and password for this phone
-    const email = `${phone.replace(/[^0-9]/g, '')}@phone.adda247.app`
-    const password = await generatePassword(phone, passwordSecret)
+    const email = `${normalizedPhone.replace(/[^0-9]/g, '')}@phone.adda247.app`
+    const password = await generatePassword(normalizedPhone, passwordSecret)
 
     // Check if user already exists with this phone
     const { data: existingProfile } = await supabase
       .from('profiles')
       .select('*, user_id')
-      .eq('phone', phone)
+      .eq('phone', normalizedPhone)
       .single()
 
     let userId: string
@@ -118,7 +138,7 @@ Deno.serve(async (req) => {
         .from('profiles')
         .insert({
           user_id: userId,
-          phone: phone,
+          phone: normalizedPhone,
           onboarded: false
         })
 
@@ -144,6 +164,13 @@ Deno.serve(async (req) => {
       )
     }
 
+    // Mark OTP as verified only after successful sign-in
+    await supabase
+      .from('phone_otps')
+      .update({ verified: true })
+      .eq('id', otpData.id)
+      .eq('verified', false)
+
     // Get profile data
     const { data: profileData } = await supabase
       .from('profiles')
@@ -159,7 +186,7 @@ Deno.serve(async (req) => {
         isNewUser: isNewUser,
         user: {
           id: userId,
-          phone: phone,
+          phone: normalizedPhone,
           role: profileData?.role || null,
           onboarded: profileData?.onboarded || false,
           name: profileData?.name || null
