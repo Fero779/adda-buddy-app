@@ -107,6 +107,42 @@ export type Database = {
         }
         Relationships: []
       }
+      studio_sessions: {
+        Row: {
+          activated_at: string | null
+          class_id: string
+          created_at: string
+          expires_at: string
+          id: string
+          panel_id: string
+          session_token: string
+          status: string
+          teacher_id: string | null
+        }
+        Insert: {
+          activated_at?: string | null
+          class_id: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          panel_id?: string
+          session_token: string
+          status?: string
+          teacher_id?: string | null
+        }
+        Update: {
+          activated_at?: string | null
+          class_id?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          panel_id?: string
+          session_token?: string
+          status?: string
+          teacher_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
