@@ -2,7 +2,7 @@ import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Home, BarChart3, Wallet, User, BookOpen, Users } from 'lucide-react';
-import { useUser } from '@/contexts/UserContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface NavItem {
   icon: typeof Home;
@@ -27,9 +27,9 @@ const influencerNavItems: NavItem[] = [
 export const BottomNav: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user } = useUser();
+  const { profile } = useAuth();
 
-  const navItems = user?.role === 'teacher' ? teacherNavItems : influencerNavItems;
+  const navItems = profile?.role === 'teacher' ? teacherNavItems : influencerNavItems;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border safe-area-bottom z-50">

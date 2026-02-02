@@ -1,6 +1,6 @@
 import React from 'react';
 import { AppShell } from '@/components/layout/AppShell';
-import { useUser } from '@/contexts/UserContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { 
   User, 
@@ -13,14 +13,16 @@ import {
   Award,
   BookOpen
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 const TeacherProfile: React.FC = () => {
-  const { user, setUser } = useUser();
+  const { profile, signOut } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    setUser(null);
-    navigate('/');
+  const handleLogout = async () => {
+    await signOut();
+    toast.success('Logged out successfully');
+    navigate('/login');
   };
 
   const menuItems = [
@@ -30,6 +32,9 @@ const TeacherProfile: React.FC = () => {
     { icon: HelpCircle, label: 'Help & Support', onClick: () => {} },
   ];
 
+  const displayName = profile?.name || 'Teacher';
+  const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase();
+
   return (
     <AppShell title="Profile">
       <div className="px-4 py-4 space-y-6">
@@ -37,12 +42,12 @@ const TeacherProfile: React.FC = () => {
         <div className="flex items-center gap-4 p-4 rounded-xl bg-card shadow-card">
           <div className="h-16 w-16 rounded-full gradient-primary flex items-center justify-center">
             <span className="text-2xl font-bold text-primary-foreground">
-              {user?.name?.split(' ').map(n => n[0]).join('') || 'U'}
+              {initials || 'T'}
             </span>
           </div>
           <div className="flex-1">
-            <h2 className="text-xl font-bold text-foreground">{user?.name}</h2>
-            <p className="text-sm text-muted-foreground">{user?.email}</p>
+            <h2 className="text-xl font-bold text-foreground">{displayName}</h2>
+            <p className="text-sm text-muted-foreground">{profile?.phone}</p>
             <div className="flex items-center gap-1 mt-1">
               <Star className="h-4 w-4 text-warning fill-warning" />
               <span className="text-sm font-medium text-foreground">4.9</span>

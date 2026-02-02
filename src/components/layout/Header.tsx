@@ -1,6 +1,6 @@
 import React from 'react';
 import { Bell } from 'lucide-react';
-import { useUser } from '@/contexts/UserContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface HeaderProps {
   title?: string;
@@ -8,7 +8,7 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ title, showGreeting = false }) => {
-  const { user } = useUser();
+  const { profile } = useAuth();
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -16,6 +16,8 @@ export const Header: React.FC<HeaderProps> = ({ title, showGreeting = false }) =
     if (hour < 17) return 'Good Afternoon';
     return 'Good Evening';
   };
+
+  const displayName = profile?.name || (profile?.role === 'teacher' ? 'Teacher' : 'Partner');
 
   return (
     <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border safe-area-top">
@@ -25,7 +27,7 @@ export const Header: React.FC<HeaderProps> = ({ title, showGreeting = false }) =
             <div>
               <p className="text-sm text-muted-foreground">{getGreeting()}</p>
               <h1 className="text-xl font-bold text-foreground">
-                {user?.name || 'User'}
+                {displayName}
               </h1>
             </div>
           ) : (
