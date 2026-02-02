@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { GraduationCap, Megaphone, Loader2, CheckCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -32,12 +32,15 @@ const roleOptions: RoleOption[] = [
 
 const RoleSelection: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { refreshProfile } = useAuth();
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
   useEffect(() => {
+    const isEditMode = new URLSearchParams(location.search).get('edit') === '1';
+
     // Check authentication status
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -57,9 +60,15 @@ const RoleSelection: React.FC = () => {
           .eq('user_id', session.user.id)
           .single();
 
-        if (profile?.onboarded && profile?.role) {
+        // If user is already onboarded, we normally redirect them away.
+        // But when explicitly revisiting (edit=1), allow the screen to show.
+        if (profile?.onboarded && profile?.role && !isEditMode) {
           navigate(`/${profile.role}`);
           return;
+        }
+
+        if (isEditMode && profile?.role) {
+          setSelectedRole(profile.role);
         }
       }
       
@@ -67,7 +76,7 @@ const RoleSelection: React.FC = () => {
     };
 
     checkAuth();
-  }, [navigate]);
+  }, [navigate, location.search]);
 
   const handleRoleSelect = (role: Role) => {
     setSelectedRole(role);

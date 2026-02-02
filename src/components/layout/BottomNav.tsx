@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { Home, BookOpen, TrendingUp, IndianRupee, Ticket } from 'lucide-react';
+import { Home, BookOpen, TrendingUp, IndianRupee, Ticket, User } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface NavItem {
@@ -15,6 +15,7 @@ const teacherNavItems: NavItem[] = [
   { icon: BookOpen, label: 'Classes', path: '/teacher/classes' },
   { icon: TrendingUp, label: 'Performance', path: '/teacher/performance' },
   { icon: IndianRupee, label: 'Revenue', path: '/teacher/revenue' },
+  { icon: User, label: 'Profile', path: '/teacher/profile' },
 ];
 
 const influencerNavItems: NavItem[] = [
@@ -22,6 +23,7 @@ const influencerNavItems: NavItem[] = [
   { icon: Ticket, label: 'Coupons', path: '/influencer/coupons' },
   { icon: TrendingUp, label: 'Performance', path: '/influencer/performance' },
   { icon: IndianRupee, label: 'Revenue', path: '/influencer/revenue' },
+  { icon: User, label: 'Profile', path: '/influencer/profile' },
 ];
 
 export const BottomNav: React.FC = () => {
@@ -29,7 +31,13 @@ export const BottomNav: React.FC = () => {
   const navigate = useNavigate();
   const { profile } = useAuth();
 
-  const navItems = profile?.role === 'teacher' ? teacherNavItems : influencerNavItems;
+  const navItems = location.pathname.startsWith('/teacher')
+    ? teacherNavItems
+    : location.pathname.startsWith('/influencer')
+      ? influencerNavItems
+      : profile?.role === 'teacher'
+        ? teacherNavItems
+        : influencerNavItems;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border safe-area-bottom z-50">
