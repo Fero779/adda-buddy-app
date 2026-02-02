@@ -1,0 +1,42 @@
+import React from 'react';
+import { Bell } from 'lucide-react';
+import { useUser } from '@/contexts/UserContext';
+
+interface HeaderProps {
+  title?: string;
+  showGreeting?: boolean;
+}
+
+export const Header: React.FC<HeaderProps> = ({ title, showGreeting = false }) => {
+  const { user } = useUser();
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good Morning';
+    if (hour < 17) return 'Good Afternoon';
+    return 'Good Evening';
+  };
+
+  return (
+    <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border safe-area-top">
+      <div className="flex items-center justify-between px-4 py-3">
+        <div className="flex-1">
+          {showGreeting ? (
+            <div>
+              <p className="text-sm text-muted-foreground">{getGreeting()}</p>
+              <h1 className="text-xl font-bold text-foreground">
+                {user?.name || 'User'}
+              </h1>
+            </div>
+          ) : (
+            <h1 className="text-xl font-bold text-foreground">{title}</h1>
+          )}
+        </div>
+        <button className="relative p-2 rounded-full hover:bg-accent transition-colors">
+          <Bell className="h-6 w-6 text-foreground" />
+          <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-primary rounded-full" />
+        </button>
+      </div>
+    </header>
+  );
+};
