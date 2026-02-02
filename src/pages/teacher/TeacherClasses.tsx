@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { Calendar, Clock, Users, CheckCircle, Video, Youtube, Radio, Upload, Key, Monitor, CalendarIcon, AlertCircle } from 'lucide-react';
+import { Calendar, Clock, Users, CheckCircle, Video, Youtube, Radio, Upload, Key, Monitor, CalendarIcon, AlertCircle, QrCode } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarPicker } from '@/components/ui/calendar';
 import { format, isWithinInterval, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { StudioQRScanner } from '@/components/StudioQRScanner';
+import { toast } from 'sonner';
 
 interface ClassItem {
   id: string;
@@ -52,6 +54,7 @@ const TeacherClasses: React.FC = () => {
     from: undefined,
     to: undefined,
   });
+  const [studioScanClass, setStudioScanClass] = useState<{ id: string; title: string } | null>(null);
 
   const filteredClasses = classes.filter(cls => {
     const matchesTab = cls.dayCategory === activeTab;
@@ -276,6 +279,21 @@ const TeacherClasses: React.FC = () => {
                 </span>
               </div>
 
+              {/* Studio App Login - Only for Today/Upcoming classes */}
+              {(activeTab === 'today' || activeTab === 'upcoming') && (
+                <div className="pt-3 border-t border-border">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full gap-2 text-primary border-primary/30 hover:bg-primary/5"
+                    onClick={() => setStudioScanClass({ id: cls.id, title: cls.title })}
+                  >
+                    <QrCode className="h-4 w-4" />
+                    Login Studio App (Scan QR)
+                  </Button>
+                </div>
+              )}
+
               {/* Stream Info - Only for Past tab */}
               {activeTab === 'past' && (cls.streamKey || cls.studioAppId) && (
                 <div className="pt-3 border-t border-border space-y-2">
@@ -311,6 +329,19 @@ const TeacherClasses: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Studio QR Scanner Modal */}
+      {studioScanClass && (
+        <StudioQRScanner
+          classId={studioScanClass.id}
+          className={studioScanClass.title}
+          onClose={() => setStudioScanClass(null)}
+          onSuccess={() => {
+            setStudioScanClass(null);
+            toast.success('Studio App connected successfully!');
+          }}
+        />
+      )}
     </AppShell>
   );
 };
