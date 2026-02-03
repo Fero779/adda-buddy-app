@@ -3,10 +3,7 @@ import { AppShell } from '@/components/layout/AppShell';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { 
-  User, 
-  Settings, 
   HelpCircle, 
-  FileText, 
   LogOut, 
   ChevronRight,
   Star,
@@ -29,12 +26,10 @@ const TeacherProfile: React.FC = () => {
     navigate('/login');
   };
 
+  // Phase 1: Only essential menu items enabled
   const menuItems = [
-    { icon: RefreshCw, label: 'Change Role', onClick: () => navigate('/role-selection?edit=1') },
-    { icon: User, label: 'Edit Profile', onClick: () => {} },
-    { icon: Settings, label: 'Settings', onClick: () => {} },
-    { icon: FileText, label: 'Documents', onClick: () => {} },
-    { icon: HelpCircle, label: 'Help & Support', onClick: () => {} },
+    { icon: RefreshCw, label: 'Change Role', onClick: () => navigate('/role-selection?edit=1'), enabled: true },
+    { icon: HelpCircle, label: 'Help & Support', onClick: () => {}, enabled: true },
   ];
 
   const displayName = profile?.name || 'Teacher';
