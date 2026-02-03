@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from '@/components/layout/AppShell';
 import { useAuth } from '@/contexts/AuthContext';
 import { QRScanner } from '@/components/QRScanner';
+import { StudioQRScanner } from '@/components/StudioQRScanner';
 import { 
   Star, 
   Clock, 
@@ -12,8 +13,11 @@ import {
   IndianRupee,
   ChevronRight,
   Calendar,
-  QrCode
+  QrCode,
+  Radio,
+  Youtube
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 // Mock data - will come from API
 const teacherData = {
@@ -24,11 +28,13 @@ const teacherData = {
   pdfsUploadedPercent: 88,
 };
 
-const todayData = {
-  classesToday: 3,
-  nextClassTime: '4:00 PM',
-  nextClassTitle: 'SSC CGL Maths',
-};
+// All upcoming classes - API will provide sorted by datetime
+const allClasses = [
+  { id: '1', title: 'SSC CGL Maths - Algebra', subject: 'Mathematics', date: '2026-02-03', time: '16:00', displayTime: '4:00 PM', duration: '90 min', status: 'upcoming' as const, platform: 'adda' as const },
+  { id: '2', title: 'Bank PO - Data Interpretation', subject: 'Quantitative', date: '2026-02-03', time: '18:30', displayTime: '6:30 PM', duration: '60 min', status: 'upcoming' as const, platform: 'youtube' as const },
+  { id: '3', title: 'SSC CGL - Current Affairs', subject: 'GK', date: '2026-02-03', time: '20:00', displayTime: '8:00 PM', duration: '45 min', status: 'upcoming' as const, platform: 'adda' as const },
+  { id: '4', title: 'Railway NTPC - Reasoning', subject: 'Reasoning', date: '2026-02-04', time: '10:00', displayTime: '10:00 AM', duration: '90 min', status: 'upcoming' as const, platform: 'adda' as const },
+];
 
 const revenueData = {
   thisMonthRevenue: 78500,
@@ -39,14 +45,51 @@ const TeacherDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { profile } = useAuth();
   const [showQRScanner, setShowQRScanner] = useState(false);
+  const [showStudioScanner, setShowStudioScanner] = useState(false);
 
   const displayName = profile?.name || teacherData.name;
+
+  // Time-based logic: Get the very next class
+  const nextClass = useMemo(() => {
+    const now = new Date();
+    const upcomingClasses = allClasses
+      .map(cls => {
+        const classDateTime = new Date(`${cls.date}T${cls.time}:00`);
+        return { ...cls, dateTime: classDateTime };
+      })
+      .filter(cls => cls.dateTime > now)
+      .sort((a, b) => a.dateTime.getTime() - b.dateTime.getTime());
+    
+    return upcomingClasses[0] || null;
+  }, []);
+
+  // Count today's classes
+  const todayClassCount = useMemo(() => {
+    const today = new Date().toISOString().split('T')[0];
+    return allClasses.filter(cls => cls.date === today).length;
+  }, []);
 
   const formatCurrency = (amount: number) => {
     if (amount >= 100000) {
       return `₹${(amount / 100000).toFixed(1)}L`;
     }
     return `₹${(amount / 1000).toFixed(1)}K`;
+  };
+
+  const getPlatformIcon = (platform: 'adda' | 'youtube') => {
+    return platform === 'adda' ? (
+      <Radio className="h-4 w-4 text-primary" />
+    ) : (
+      <Youtube className="h-4 w-4 text-destructive" />
+    );
+  };
+
+  const getRelativeDate = (dateStr: string) => {
+    const today = new Date().toISOString().split('T')[0];
+    const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+    if (dateStr === today) return 'Today';
+    if (dateStr === tomorrow) return 'Tomorrow';
+    return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
   return (
@@ -110,32 +153,65 @@ const TeacherDashboard: React.FC = () => {
           <ChevronRight className="h-5 w-5 text-muted-foreground" />
         </button>
 
-        {/* Today Snapshot Card */}
-        <div className="p-5 rounded-2xl bg-card shadow-card">
-          <div className="flex items-center gap-2 mb-4">
-            <Calendar className="h-5 w-5 text-primary" />
-            <h3 className="text-base font-bold text-foreground">Today</h3>
-          </div>
-          
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <p className="text-3xl font-bold text-foreground">{todayData.classesToday}</p>
-              <p className="text-sm text-muted-foreground">Classes scheduled</p>
+        {/* Next Class Card - Time-Based */}
+        {nextClass ? (
+          <div className="p-5 rounded-2xl bg-card shadow-card">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-primary" />
+                <h3 className="text-base font-bold text-foreground">Next Class</h3>
+              </div>
+              <span className="text-xs font-medium text-muted-foreground">
+                {todayClassCount} classes today
+              </span>
             </div>
-            <div className="text-right">
-              <p className="text-sm text-muted-foreground">Next class at</p>
-              <p className="text-xl font-bold text-primary">{todayData.nextClassTime}</p>
-              <p className="text-xs text-muted-foreground">{todayData.nextClassTitle}</p>
+            
+            {/* Class Details */}
+            <div className="mb-4">
+              <div className="flex items-center gap-2 mb-1">
+                {getPlatformIcon(nextClass.platform)}
+                <h4 className="font-semibold text-foreground">{nextClass.title}</h4>
+              </div>
+              <p className="text-sm text-muted-foreground mb-2">{nextClass.subject}</p>
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <Calendar className="h-4 w-4" />
+                  {getRelativeDate(nextClass.date)}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Clock className="h-4 w-4" />
+                  {nextClass.displayTime}
+                </span>
+                <span className="text-xs">({nextClass.duration})</span>
+              </div>
             </div>
-          </div>
 
-          <button 
-            className="w-full py-3 rounded-xl gradient-primary text-primary-foreground font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity active:scale-[0.98]"
-          >
-            <Video className="h-5 w-5" />
-            Join Next Class
-          </button>
-        </div>
+            {/* Primary CTA - Join Class */}
+            <button 
+              className="w-full py-3 rounded-xl gradient-primary text-primary-foreground font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity active:scale-[0.98] mb-3"
+            >
+              <Video className="h-5 w-5" />
+              Join Next Class
+            </button>
+
+            {/* Secondary - Login Studio App */}
+            <button
+              onClick={() => setShowStudioScanner(true)}
+              className="w-full py-2.5 rounded-xl border border-primary/30 text-primary font-medium flex items-center justify-center gap-2 hover:bg-primary/5 transition-colors active:scale-[0.98]"
+            >
+              <QrCode className="h-4 w-4" />
+              Login Studio App (Scan QR)
+            </button>
+          </div>
+        ) : (
+          <div className="p-5 rounded-2xl bg-card shadow-card">
+            <div className="flex items-center gap-2 mb-4">
+              <Calendar className="h-5 w-5 text-primary" />
+              <h3 className="text-base font-bold text-foreground">No Upcoming Classes</h3>
+            </div>
+            <p className="text-sm text-muted-foreground">You have no scheduled classes at the moment.</p>
+          </div>
+        )}
 
         {/* Revenue Snapshot Card */}
         <div className="p-5 rounded-2xl bg-card shadow-card">
@@ -165,11 +241,24 @@ const TeacherDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* QR Scanner Modal */}
+      {/* QR Scanner Modal - Admin Login */}
       {showQRScanner && (
         <QRScanner
           onClose={() => setShowQRScanner(false)}
           onSuccess={() => setShowQRScanner(false)}
+        />
+      )}
+
+      {/* Studio QR Scanner Modal */}
+      {showStudioScanner && nextClass && (
+        <StudioQRScanner
+          classId={nextClass.id}
+          className={nextClass.title}
+          onClose={() => setShowStudioScanner(false)}
+          onSuccess={() => {
+            setShowStudioScanner(false);
+            toast.success('Studio App connected successfully!');
+          }}
         />
       )}
     </AppShell>
