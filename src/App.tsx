@@ -12,18 +12,11 @@ import RoleSelection from "./pages/RoleSelection";
 import NotFound from "./pages/NotFound";
 import AdminLogin from "./pages/AdminLogin";
 
-// Teacher Pages
+// Teacher Pages (Phase 1: Teacher-only mode)
 import TeacherDashboard from "./pages/teacher/TeacherDashboard";
 import TeacherClasses from "./pages/teacher/TeacherClasses";
 import TeacherPerformance from "./pages/teacher/TeacherPerformance";
 import TeacherProfile from "./pages/teacher/TeacherProfile";
-
-// Influencer Pages
-import InfluencerDashboard from "./pages/influencer/InfluencerDashboard";
-import InfluencerCoupons from "./pages/influencer/InfluencerCoupons";
-import InfluencerPerformance from "./pages/influencer/InfluencerPerformance";
-import InfluencerRevenue from "./pages/influencer/InfluencerRevenue";
-import InfluencerProfile from "./pages/influencer/InfluencerProfile";
 
 const queryClient = new QueryClient();
 
@@ -38,10 +31,8 @@ const LoadingScreen = () => (
   </div>
 );
 
-const ProtectedRoute: React.FC<{ 
-  children: React.ReactNode; 
-  requiredRole?: 'teacher' | 'influencer' 
-}> = ({ children, requiredRole }) => {
+// Phase 1: Teacher-only protected route
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, profile, isLoading } = useAuth();
 
   if (isLoading) {
@@ -54,13 +45,8 @@ const ProtectedRoute: React.FC<{
   }
 
   // Logged in but not onboarded
-  if (!profile?.onboarded || !profile?.role) {
+  if (!profile?.onboarded) {
     return <Navigate to="/role-selection" replace />;
-  }
-
-  // Check role requirement
-  if (requiredRole && profile.role !== requiredRole) {
-    return <Navigate to={`/${profile.role}`} replace />;
   }
 
   return <>{children}</>;
@@ -73,13 +59,13 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     return <LoadingScreen />;
   }
 
-  // Already logged in and onboarded - redirect to dashboard
-  if (user && profile?.onboarded && profile?.role) {
-    return <Navigate to={`/${profile.role}`} replace />;
+  // Already logged in and onboarded - redirect to teacher dashboard
+  if (user && profile?.onboarded) {
+    return <Navigate to="/teacher" replace />;
   }
 
   // Logged in but not onboarded - redirect to role selection
-  if (user && (!profile?.onboarded || !profile?.role)) {
+  if (user && !profile?.onboarded) {
     return <Navigate to="/role-selection" replace />;
   }
 
@@ -97,18 +83,15 @@ const AppRoutes = () => {
       {/* Semi-protected: needs auth but not role */}
       <Route path="/role-selection" element={<RoleSelection />} />
 
-      {/* Teacher Routes - Phase 1: Revenue removed (API not available) */}
-      <Route path="/teacher" element={<ProtectedRoute requiredRole="teacher"><TeacherDashboard /></ProtectedRoute>} />
-      <Route path="/teacher/classes" element={<ProtectedRoute requiredRole="teacher"><TeacherClasses /></ProtectedRoute>} />
-      <Route path="/teacher/performance" element={<ProtectedRoute requiredRole="teacher"><TeacherPerformance /></ProtectedRoute>} />
-      <Route path="/teacher/profile" element={<ProtectedRoute requiredRole="teacher"><TeacherProfile /></ProtectedRoute>} />
+      {/* Teacher Routes - Phase 1: Teacher-only mode */}
+      <Route path="/teacher" element={<ProtectedRoute><TeacherDashboard /></ProtectedRoute>} />
+      <Route path="/teacher/classes" element={<ProtectedRoute><TeacherClasses /></ProtectedRoute>} />
+      <Route path="/teacher/performance" element={<ProtectedRoute><TeacherPerformance /></ProtectedRoute>} />
+      <Route path="/teacher/profile" element={<ProtectedRoute><TeacherProfile /></ProtectedRoute>} />
 
-      {/* Influencer Routes */}
-      <Route path="/influencer" element={<ProtectedRoute requiredRole="influencer"><InfluencerDashboard /></ProtectedRoute>} />
-      <Route path="/influencer/coupons" element={<ProtectedRoute requiredRole="influencer"><InfluencerCoupons /></ProtectedRoute>} />
-      <Route path="/influencer/performance" element={<ProtectedRoute requiredRole="influencer"><InfluencerPerformance /></ProtectedRoute>} />
-      <Route path="/influencer/revenue" element={<ProtectedRoute requiredRole="influencer"><InfluencerRevenue /></ProtectedRoute>} />
-      <Route path="/influencer/profile" element={<ProtectedRoute requiredRole="influencer"><InfluencerProfile /></ProtectedRoute>} />
+      {/* Phase 1: Influencer routes redirect to Teacher */}
+      <Route path="/influencer" element={<Navigate to="/teacher" replace />} />
+      <Route path="/influencer/*" element={<Navigate to="/teacher" replace />} />
 
       {/* Catch-all */}
       <Route path="*" element={<NotFound />} />

@@ -9,8 +9,7 @@ import {
   Star,
   Award,
   BookOpen,
-  QrCode,
-  RefreshCw
+  QrCode
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { QRScanner } from '@/components/QRScanner';
@@ -25,12 +24,6 @@ const TeacherProfile: React.FC = () => {
     toast.success('Logged out successfully');
     navigate('/login');
   };
-
-  // Phase 1: Only essential menu items enabled
-  const menuItems = [
-    { icon: RefreshCw, label: 'Change Role', onClick: () => navigate('/role-selection?edit=1'), enabled: true },
-    { icon: HelpCircle, label: 'Help & Support', onClick: () => {}, enabled: true },
-  ];
 
   const displayName = profile?.name || 'Teacher';
   const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase();
@@ -90,22 +83,17 @@ const TeacherProfile: React.FC = () => {
           <ChevronRight className="h-5 w-5 text-primary-foreground" />
         </button>
 
-        {/* Menu Items */}
-        <div className="space-y-2">
-          {menuItems.map((item, index) => (
-            <button
-              key={index}
-              onClick={item.onClick}
-              className="w-full flex items-center gap-4 p-4 rounded-xl bg-card shadow-card hover:shadow-elevated transition-all active:scale-[0.99]"
-            >
-              <div className="p-2 rounded-lg bg-accent">
-                <item.icon className="h-5 w-5 text-primary" />
-              </div>
-              <span className="flex-1 text-left font-medium text-foreground">{item.label}</span>
-              <ChevronRight className="h-5 w-5 text-muted-foreground" />
-            </button>
-          ))}
-        </div>
+        {/* Help & Support */}
+        <button
+          onClick={() => {}}
+          className="w-full flex items-center gap-4 p-4 rounded-xl bg-card shadow-card hover:shadow-elevated transition-all active:scale-[0.99]"
+        >
+          <div className="p-2 rounded-lg bg-accent">
+            <HelpCircle className="h-5 w-5 text-primary" />
+          </div>
+          <span className="flex-1 text-left font-medium text-foreground">Help & Support</span>
+          <ChevronRight className="h-5 w-5 text-muted-foreground" />
+        </button>
 
         {/* Logout */}
         <button

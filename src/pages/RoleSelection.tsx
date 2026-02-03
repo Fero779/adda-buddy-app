@@ -1,74 +1,38 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { GraduationCap, Megaphone, Loader2, CheckCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { GraduationCap, Loader2, CheckCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 
-type Role = 'teacher' | 'influencer';
-
-interface RoleOption {
-  id: Role;
-  title: string;
-  description: string;
-  icon: typeof GraduationCap;
-}
-
-const roleOptions: RoleOption[] = [
-  {
-    id: 'teacher',
-    title: 'Teacher',
-    description: 'I take classes and manage my teaching work',
-    icon: GraduationCap,
-  },
-  {
-    id: 'influencer',
-    title: 'Influencer',
-    description: 'I promote courses and earn via coupons',
-    icon: Megaphone,
-  },
-];
-
+// Phase 1: Teacher-only mode - auto-assign Teacher role
 const RoleSelection: React.FC = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { refreshProfile } = useAuth();
-  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
   useEffect(() => {
-    const isEditMode = new URLSearchParams(location.search).get('edit') === '1';
-
-    // Check authentication status
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
-        // Check for pending user from OTP flow
         const pendingUser = sessionStorage.getItem('pendingUser');
         if (!pendingUser) {
           navigate('/login');
           return;
         }
       } else {
-        // Check if user is already onboarded
+        // Check if user is already onboarded - redirect to teacher dashboard
         const { data: profile } = await supabase
           .from('profiles')
           .select('role, onboarded')
           .eq('user_id', session.user.id)
           .single();
 
-        // If user is already onboarded, we normally redirect them away.
-        // But when explicitly revisiting (edit=1), allow the screen to show.
-        if (profile?.onboarded && profile?.role && !isEditMode) {
-          navigate(`/${profile.role}`);
+        if (profile?.onboarded) {
+          navigate('/teacher');
           return;
-        }
-
-        if (isEditMode && profile?.role) {
-          setSelectedRole(profile.role);
         }
       }
       
@@ -76,31 +40,19 @@ const RoleSelection: React.FC = () => {
     };
 
     checkAuth();
-  }, [navigate, location.search]);
-
-  const handleRoleSelect = (role: Role) => {
-    setSelectedRole(role);
-  };
+  }, [navigate]);
 
   const handleContinue = async () => {
-    if (!selectedRole) {
-      toast.error('Please select a role to continue');
-      return;
-    }
-
     setIsLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
-        // Fallback: use pending user data
         const pendingUser = sessionStorage.getItem('pendingUser');
         if (pendingUser) {
-          const userData = JSON.parse(pendingUser);
-          // Store role locally and redirect
-          sessionStorage.setItem('userRole', selectedRole);
+          sessionStorage.setItem('userRole', 'teacher');
           sessionStorage.removeItem('pendingUser');
-          navigate(`/${selectedRole}`);
+          navigate('/teacher');
           return;
         }
         
@@ -109,26 +61,23 @@ const RoleSelection: React.FC = () => {
         return;
       }
 
-      // Save role via edge function
+      // Phase 1: Always save as Teacher
       const { data, error } = await supabase.functions.invoke('save-user-role', {
-        body: { role: selectedRole }
+        body: { role: 'teacher' }
       });
 
       if (error) throw error;
 
       if (data.success) {
-        // CRITICAL: Refresh the profile in AuthContext before navigating
-        // This ensures ProtectedRoute sees the updated onboarded/role state
         await refreshProfile();
-        
-        toast.success(`Welcome! You're now registered as a ${selectedRole}`);
-        navigate(`/${selectedRole}`, { replace: true });
+        toast.success("Welcome! You're now registered as a Teacher");
+        navigate('/teacher', { replace: true });
       } else {
         throw new Error(data.error || 'Failed to save role');
       }
     } catch (error: any) {
       console.error('Save role error:', error);
-      toast.error(error.message || 'Failed to save your role');
+      toast.error(error.message || 'Failed to complete setup');
     } finally {
       setIsLoading(false);
     }
@@ -157,74 +106,69 @@ const RoleSelection: React.FC = () => {
         </div>
 
         <h1 className="text-3xl font-bold text-foreground mb-2">
-          How do you use Adda247?
+          Welcome, Teacher!
         </h1>
         <p className="text-muted-foreground text-lg">
-          Select your role to personalize your experience
+          Let's set up your teaching dashboard
         </p>
       </div>
 
-      {/* Role Options */}
-      <div className="flex-1 px-6 space-y-4">
-        {roleOptions.map((option, index) => {
-          const Icon = option.icon;
-          const isSelected = selectedRole === option.id;
-
-          return (
-            <button
-              key={option.id}
-              onClick={() => handleRoleSelect(option.id)}
-              className={cn(
-                'w-full p-6 rounded-2xl text-left transition-all duration-300 animate-slide-up',
-                'border-2 active:scale-[0.98]',
-                isSelected
-                  ? 'bg-accent border-primary shadow-elevated'
-                  : 'bg-card border-transparent shadow-card hover:shadow-elevated hover:border-border'
-              )}
-              style={{ animationDelay: `${index * 0.1}s` }}
-            >
-              <div className="flex items-start gap-4">
-                <div className={cn(
-                  'p-4 rounded-xl transition-colors duration-300',
-                  isSelected ? 'bg-primary' : 'bg-accent'
-                )}>
-                  <Icon className={cn(
-                    'h-8 w-8 transition-colors duration-300',
-                    isSelected ? 'text-primary-foreground' : 'text-primary'
-                  )} />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-xl font-bold text-foreground">{option.title}</h3>
-                    {isSelected && (
-                      <CheckCircle className="h-5 w-5 text-primary animate-scale-in" />
-                    )}
-                  </div>
-                  <p className="text-muted-foreground mt-1">{option.description}</p>
-                </div>
+      {/* Teacher Role Confirmation */}
+      <div className="flex-1 px-6">
+        <div className="p-6 rounded-2xl bg-accent border-2 border-primary shadow-elevated animate-slide-up">
+          <div className="flex items-start gap-4">
+            <div className="p-4 rounded-xl bg-primary">
+              <GraduationCap className="h-8 w-8 text-primary-foreground" />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <h3 className="text-xl font-bold text-foreground">Teacher</h3>
+                <CheckCircle className="h-5 w-5 text-primary" />
               </div>
-            </button>
-          );
-        })}
+              <p className="text-muted-foreground mt-1">
+                Manage your classes, track performance, and grow your teaching career
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Features Preview */}
+        <div className="mt-6 space-y-3">
+          <p className="text-sm font-medium text-foreground">What you can do:</p>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="p-3 rounded-xl bg-card shadow-card">
+              <p className="text-sm text-foreground font-medium">📚 View Classes</p>
+              <p className="text-xs text-muted-foreground">Today, upcoming & past</p>
+            </div>
+            <div className="p-3 rounded-xl bg-card shadow-card">
+              <p className="text-sm text-foreground font-medium">📊 Performance</p>
+              <p className="text-xs text-muted-foreground">Ratings & metrics</p>
+            </div>
+            <div className="p-3 rounded-xl bg-card shadow-card">
+              <p className="text-sm text-foreground font-medium">📱 QR Login</p>
+              <p className="text-xs text-muted-foreground">Access PC dashboard</p>
+            </div>
+            <div className="p-3 rounded-xl bg-card shadow-card">
+              <p className="text-sm text-foreground font-medium">🎥 Studio App</p>
+              <p className="text-xs text-muted-foreground">Quick class setup</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Continue Button */}
       <div className="px-6 py-8 animate-fade-in" style={{ animationDelay: '0.3s' }}>
         <button
           onClick={handleContinue}
-          disabled={!selectedRole || isLoading}
+          disabled={isLoading}
           className="w-full h-14 rounded-xl gradient-primary text-primary-foreground font-semibold text-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity active:scale-[0.98]"
         >
           {isLoading ? (
             <Loader2 className="h-5 w-5 animate-spin" />
           ) : (
-            'Continue'
+            'Get Started'
           )}
         </button>
-        
-        <p className="text-center text-sm text-muted-foreground mt-4">
-          You can change this later in settings
-        </p>
       </div>
     </div>
   );
