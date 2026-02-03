@@ -1,8 +1,6 @@
 import React from 'react';
 import { AppShell } from '@/components/layout/AppShell';
-import { IndianRupee, ShoppingCart, TrendingUp, BookOpen, Sparkles, Link2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { CreateShareableLinkSheet } from '@/components/teacher/CreateShareableLinkSheet';
+import { IndianRupee, ShoppingCart, TrendingUp, BookOpen, Sparkles } from 'lucide-react';
 
 // Mock data - will come from API
 const revenueSummary = {
@@ -43,31 +41,6 @@ const TeacherRevenue: React.FC = () => {
   return (
     <AppShell title="Revenue">
       <div className="px-4 py-4 space-y-6">
-        {/* Promote Your Batch Section */}
-        <section>
-          <h2 className="text-lg font-bold text-foreground mb-3">Promote Your Batch</h2>
-          <div className="p-4 rounded-xl bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-foreground mb-1">
-                  Create shareable links with coupons
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Share with students to boost enrollments
-                </p>
-              </div>
-              <CreateShareableLinkSheet
-                trigger={
-                  <Button size="sm" className="flex-shrink-0">
-                    <Link2 className="h-4 w-4 mr-1.5" />
-                    Create Link
-                  </Button>
-                }
-              />
-            </div>
-          </div>
-        </section>
-
         {/* Motivational Header */}
         <div className="p-4 rounded-xl bg-muted/50 border border-border">
           <div className="flex items-center gap-2 text-primary">
