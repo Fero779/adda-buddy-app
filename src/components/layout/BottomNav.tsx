@@ -10,11 +10,11 @@ interface NavItem {
   path: string;
 }
 
+// Phase 1: Revenue removed (API not available)
 const teacherNavItems: NavItem[] = [
   { icon: Home, label: 'Home', path: '/teacher' },
   { icon: BookOpen, label: 'Classes', path: '/teacher/classes' },
   { icon: TrendingUp, label: 'Performance', path: '/teacher/performance' },
-  { icon: IndianRupee, label: 'Revenue', path: '/teacher/revenue' },
   { icon: User, label: 'Profile', path: '/teacher/profile' },
 ];
 

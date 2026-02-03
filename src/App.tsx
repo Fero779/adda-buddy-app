@@ -16,7 +16,6 @@ import AdminLogin from "./pages/AdminLogin";
 import TeacherDashboard from "./pages/teacher/TeacherDashboard";
 import TeacherClasses from "./pages/teacher/TeacherClasses";
 import TeacherPerformance from "./pages/teacher/TeacherPerformance";
-import TeacherRevenue from "./pages/teacher/TeacherRevenue";
 import TeacherProfile from "./pages/teacher/TeacherProfile";
 
 // Influencer Pages
@@ -98,11 +97,10 @@ const AppRoutes = () => {
       {/* Semi-protected: needs auth but not role */}
       <Route path="/role-selection" element={<RoleSelection />} />
 
-      {/* Teacher Routes */}
+      {/* Teacher Routes - Phase 1: Revenue removed (API not available) */}
       <Route path="/teacher" element={<ProtectedRoute requiredRole="teacher"><TeacherDashboard /></ProtectedRoute>} />
       <Route path="/teacher/classes" element={<ProtectedRoute requiredRole="teacher"><TeacherClasses /></ProtectedRoute>} />
       <Route path="/teacher/performance" element={<ProtectedRoute requiredRole="teacher"><TeacherPerformance /></ProtectedRoute>} />
-      <Route path="/teacher/revenue" element={<ProtectedRoute requiredRole="teacher"><TeacherRevenue /></ProtectedRoute>} />
       <Route path="/teacher/profile" element={<ProtectedRoute requiredRole="teacher"><TeacherProfile /></ProtectedRoute>} />
 
       {/* Influencer Routes */}
