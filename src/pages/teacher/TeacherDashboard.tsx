@@ -1,5 +1,4 @@
 import React, { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { AppShell } from '@/components/layout/AppShell';
 import { useAuth } from '@/contexts/AuthContext';
 import { QRScanner } from '@/components/QRScanner';
@@ -10,7 +9,6 @@ import {
   XCircle, 
   FileText,
   Video,
-  IndianRupee,
   ChevronRight,
   Calendar,
   QrCode,
@@ -36,13 +34,7 @@ const allClasses = [
   { id: '4', title: 'Railway NTPC - Reasoning', subject: 'Reasoning', date: '2026-02-04', time: '10:00', displayTime: '10:00 AM', duration: '90 min', status: 'upcoming' as const, platform: 'adda' as const },
 ];
 
-const revenueData = {
-  thisMonthRevenue: 78500,
-  ordersCount: 156,
-};
-
 const TeacherDashboard: React.FC = () => {
-  const navigate = useNavigate();
   const { profile } = useAuth();
   const [showQRScanner, setShowQRScanner] = useState(false);
   const [showStudioScanner, setShowStudioScanner] = useState(false);
@@ -69,11 +61,12 @@ const TeacherDashboard: React.FC = () => {
     return allClasses.filter(cls => cls.date === today).length;
   }, []);
 
-  const formatCurrency = (amount: number) => {
-    if (amount >= 100000) {
-      return `₹${(amount / 100000).toFixed(1)}L`;
-    }
-    return `₹${(amount / 1000).toFixed(1)}K`;
+  const getRelativeDate = (dateStr: string) => {
+    const today = new Date().toISOString().split('T')[0];
+    const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+    if (dateStr === today) return 'Today';
+    if (dateStr === tomorrow) return 'Tomorrow';
+    return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
   const getPlatformIcon = (platform: 'adda' | 'youtube') => {
@@ -82,14 +75,6 @@ const TeacherDashboard: React.FC = () => {
     ) : (
       <Youtube className="h-4 w-4 text-destructive" />
     );
-  };
-
-  const getRelativeDate = (dateStr: string) => {
-    const today = new Date().toISOString().split('T')[0];
-    const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
-    if (dateStr === today) return 'Today';
-    if (dateStr === tomorrow) return 'Tomorrow';
-    return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
   return (
@@ -212,33 +197,6 @@ const TeacherDashboard: React.FC = () => {
             <p className="text-sm text-muted-foreground">You have no scheduled classes at the moment.</p>
           </div>
         )}
-
-        {/* Revenue Snapshot Card */}
-        <div className="p-5 rounded-2xl bg-card shadow-card">
-          <div className="flex items-center gap-2 mb-4">
-            <IndianRupee className="h-5 w-5 text-primary" />
-            <h3 className="text-base font-bold text-foreground">This Month</h3>
-          </div>
-          
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <p className="text-3xl font-bold text-foreground">{formatCurrency(revenueData.thisMonthRevenue)}</p>
-              <p className="text-sm text-muted-foreground">Revenue earned</p>
-            </div>
-            <div className="text-right">
-              <p className="text-2xl font-bold text-foreground">{revenueData.ordersCount}</p>
-              <p className="text-sm text-muted-foreground">Orders</p>
-            </div>
-          </div>
-
-          <button 
-            onClick={() => navigate('/teacher/revenue')}
-            className="w-full py-3 rounded-xl bg-accent text-foreground font-semibold flex items-center justify-center gap-2 hover:bg-accent/80 transition-colors active:scale-[0.98]"
-          >
-            View Revenue
-            <ChevronRight className="h-5 w-5" />
-          </button>
-        </div>
       </div>
 
       {/* QR Scanner Modal - Admin Login */}
