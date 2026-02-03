@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from '@/components/layout/AppShell';
 import { useAuth } from '@/contexts/AuthContext';
+import { QRScanner } from '@/components/QRScanner';
 import { 
   Star, 
   Clock, 
@@ -10,7 +11,8 @@ import {
   Video,
   IndianRupee,
   ChevronRight,
-  Calendar
+  Calendar,
+  QrCode
 } from 'lucide-react';
 
 // Mock data - will come from API
@@ -36,6 +38,7 @@ const revenueData = {
 const TeacherDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { profile } = useAuth();
+  const [showQRScanner, setShowQRScanner] = useState(false);
 
   const displayName = profile?.name || teacherData.name;
 
@@ -92,6 +95,21 @@ const TeacherDashboard: React.FC = () => {
           </div>
         </div>
 
+        {/* Scan QR to Login PC */}
+        <button
+          onClick={() => setShowQRScanner(true)}
+          className="w-full flex items-center gap-3 p-4 rounded-xl bg-card shadow-card hover:shadow-elevated transition-all active:scale-[0.99]"
+        >
+          <div className="p-2.5 rounded-lg bg-primary/10">
+            <QrCode className="h-5 w-5 text-primary" />
+          </div>
+          <div className="flex-1 text-left">
+            <p className="font-semibold text-foreground text-sm">Scan QR to Login PC</p>
+            <p className="text-xs text-muted-foreground">Access your dashboard on desktop</p>
+          </div>
+          <ChevronRight className="h-5 w-5 text-muted-foreground" />
+        </button>
+
         {/* Today Snapshot Card */}
         <div className="p-5 rounded-2xl bg-card shadow-card">
           <div className="flex items-center gap-2 mb-4">
@@ -146,6 +164,14 @@ const TeacherDashboard: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* QR Scanner Modal */}
+      {showQRScanner && (
+        <QRScanner
+          onClose={() => setShowQRScanner(false)}
+          onSuccess={() => setShowQRScanner(false)}
+        />
+      )}
     </AppShell>
   );
 };
