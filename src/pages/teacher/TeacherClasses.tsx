@@ -3,13 +3,14 @@ import { AppShell } from '@/components/layout/AppShell';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Calendar, Clock, Users, CheckCircle, Video, Youtube, Radio, Key, Monitor, CalendarIcon, ChevronDown, FileText, Copy } from 'lucide-react';
+import { Calendar, Clock, CheckCircle, Video, Youtube, Radio, Key, Monitor, CalendarIcon, ChevronDown, FileText, Copy, QrCode } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarPicker } from '@/components/ui/calendar';
 import { format, isWithinInterval, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { StudioQRScanner } from '@/components/StudioQRScanner';
 
 interface ClassItem {
   id: string;
@@ -59,6 +60,7 @@ const TeacherClasses: React.FC = () => {
     to: undefined,
   });
   const [expandedClasses, setExpandedClasses] = useState<Set<string>>(new Set());
+  const [studioScannerClass, setStudioScannerClass] = useState<ClassItem | null>(null);
 
   const toggleExpanded = (classId: string) => {
     setExpandedClasses(prev => {
@@ -276,21 +278,19 @@ const TeacherClasses: React.FC = () => {
                     <Clock className="h-4 w-4" />
                     {cls.time} ({cls.duration})
                   </span>
-                  <span className="flex items-center gap-1.5">
-                    <Users className="h-4 w-4" />
-                    {cls.students}
-                  </span>
                 </div>
 
-                {/* Join Class CTA - Only for Today/Live classes */}
-                {(activeTab === 'today' && (cls.status === 'live' || cls.status === 'upcoming')) && (
+                {/* Login Studio App CTA - Only for Today/Upcoming classes */}
+                {(activeTab === 'today' || activeTab === 'upcoming') && (cls.status === 'live' || cls.status === 'upcoming') && (
                   <div className="mb-3">
                     <Button
-                      className="w-full gap-2 gradient-primary text-primary-foreground"
+                      variant="outline"
+                      className="w-full gap-2 border-primary/30 text-primary hover:bg-primary/5"
                       size="sm"
+                      onClick={() => setStudioScannerClass(cls)}
                     >
-                      <Video className="h-4 w-4" />
-                      Join Class
+                      <QrCode className="h-4 w-4" />
+                      Login Studio App (Scan QR)
                     </Button>
                   </div>
                 )}
@@ -409,6 +409,19 @@ const TeacherClasses: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Studio QR Scanner Modal */}
+      {studioScannerClass && (
+        <StudioQRScanner
+          classId={studioScannerClass.id}
+          className={studioScannerClass.title}
+          onClose={() => setStudioScannerClass(null)}
+          onSuccess={() => {
+            setStudioScannerClass(null);
+            toast.success('Studio App connected successfully!');
+          }}
+        />
+      )}
     </AppShell>
   );
 };
