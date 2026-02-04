@@ -24,12 +24,20 @@ const teacherData = {
   pdfsUploadedPercent: 88,
 };
 
+// Helper to get today's date string
+const getDateString = (daysFromNow: number = 0) => {
+  const date = new Date();
+  date.setDate(date.getDate() + daysFromNow);
+  return date.toISOString().split('T')[0];
+};
+
 // All upcoming classes - API will provide sorted by datetime
+// Using relative dates so classes always show
 const allClasses = [
-  { id: '1', title: 'SSC CGL Maths - Algebra', subject: 'Mathematics', date: '2026-02-03', time: '16:00', displayTime: '4:00 PM', duration: '90 min', status: 'upcoming' as const, platform: 'adda' as const },
-  { id: '2', title: 'Bank PO - Data Interpretation', subject: 'Quantitative', date: '2026-02-03', time: '18:30', displayTime: '6:30 PM', duration: '60 min', status: 'upcoming' as const, platform: 'youtube' as const },
-  { id: '3', title: 'SSC CGL - Current Affairs', subject: 'GK', date: '2026-02-03', time: '20:00', displayTime: '8:00 PM', duration: '45 min', status: 'upcoming' as const, platform: 'adda' as const },
-  { id: '4', title: 'Railway NTPC - Reasoning', subject: 'Reasoning', date: '2026-02-04', time: '10:00', displayTime: '10:00 AM', duration: '90 min', status: 'upcoming' as const, platform: 'adda' as const },
+  { id: '1', title: 'SSC CGL Maths', subject: 'Mathematics', date: getDateString(0), time: '16:00', displayTime: '4:00 PM', duration: '90 min', status: 'upcoming' as const, platform: 'adda' as const },
+  { id: '2', title: 'Bank PO - Data Interpretation', subject: 'Quantitative', date: getDateString(0), time: '18:30', displayTime: '6:30 PM', duration: '60 min', status: 'upcoming' as const, platform: 'youtube' as const },
+  { id: '3', title: 'SSC CGL - Current Affairs', subject: 'GK', date: getDateString(0), time: '20:00', displayTime: '8:00 PM', duration: '45 min', status: 'upcoming' as const, platform: 'adda' as const },
+  { id: '4', title: 'Railway NTPC - Reasoning', subject: 'Reasoning', date: getDateString(1), time: '10:00', displayTime: '10:00 AM', duration: '90 min', status: 'upcoming' as const, platform: 'adda' as const },
 ];
 
 const TeacherDashboard: React.FC = () => {
