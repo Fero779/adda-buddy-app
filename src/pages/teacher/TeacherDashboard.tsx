@@ -11,9 +11,7 @@ import {
   Video,
   ChevronRight,
   Calendar,
-  QrCode,
-  Radio,
-  Youtube
+  QrCode
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -60,22 +58,6 @@ const TeacherDashboard: React.FC = () => {
     const today = new Date().toISOString().split('T')[0];
     return allClasses.filter(cls => cls.date === today).length;
   }, []);
-
-  const getRelativeDate = (dateStr: string) => {
-    const today = new Date().toISOString().split('T')[0];
-    const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
-    if (dateStr === today) return 'Today';
-    if (dateStr === tomorrow) return 'Tomorrow';
-    return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  };
-
-  const getPlatformIcon = (platform: 'adda' | 'youtube') => {
-    return platform === 'adda' ? (
-      <Radio className="h-4 w-4 text-primary" />
-    ) : (
-      <Youtube className="h-4 w-4 text-destructive" />
-    );
-  };
 
   return (
     <AppShell showGreeting>
@@ -138,61 +120,41 @@ const TeacherDashboard: React.FC = () => {
           <ChevronRight className="h-5 w-5 text-muted-foreground" />
         </button>
 
-        {/* Next Class Card - Time-Based */}
+        {/* Today's Classes Card */}
         {nextClass ? (
           <div className="p-5 rounded-2xl bg-card shadow-card">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-primary" />
-                <h3 className="text-base font-bold text-foreground">Next Class</h3>
-              </div>
-              <span className="text-xs font-medium text-muted-foreground">
-                {todayClassCount} classes today
-              </span>
+            {/* Header */}
+            <div className="flex items-center gap-2 mb-4">
+              <Calendar className="h-5 w-5 text-primary" />
+              <span className="font-semibold text-foreground">Today</span>
             </div>
             
-            {/* Class Details */}
-            <div className="mb-4">
-              <div className="flex items-center gap-2 mb-1">
-                {getPlatformIcon(nextClass.platform)}
-                <h4 className="font-semibold text-foreground">{nextClass.title}</h4>
+            {/* Content - Left: Count, Right: Next Class Info */}
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <p className="text-3xl font-bold text-foreground">{todayClassCount}</p>
+                <p className="text-sm text-muted-foreground">Classes scheduled</p>
               </div>
-              <p className="text-sm text-muted-foreground mb-2">{nextClass.subject}</p>
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <Calendar className="h-4 w-4" />
-                  {getRelativeDate(nextClass.date)}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Clock className="h-4 w-4" />
-                  {nextClass.displayTime}
-                </span>
-                <span className="text-xs">({nextClass.duration})</span>
+              <div className="text-right">
+                <p className="text-sm text-muted-foreground">Next class at</p>
+                <p className="text-xl font-bold text-primary">{nextClass.displayTime}</p>
+                <p className="text-sm text-muted-foreground">{nextClass.title.split(' - ')[0]}</p>
               </div>
             </div>
 
             {/* Primary CTA - Join Class */}
             <button 
-              className="w-full py-3 rounded-xl gradient-primary text-primary-foreground font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity active:scale-[0.98] mb-3"
+              className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground font-semibold flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors active:scale-[0.98]"
             >
               <Video className="h-5 w-5" />
               Join Next Class
-            </button>
-
-            {/* Secondary - Login Studio App */}
-            <button
-              onClick={() => setShowStudioScanner(true)}
-              className="w-full py-2.5 rounded-xl border border-primary/30 text-primary font-medium flex items-center justify-center gap-2 hover:bg-primary/5 transition-colors active:scale-[0.98]"
-            >
-              <QrCode className="h-4 w-4" />
-              Login Studio App (Scan QR)
             </button>
           </div>
         ) : (
           <div className="p-5 rounded-2xl bg-card shadow-card">
             <div className="flex items-center gap-2 mb-4">
               <Calendar className="h-5 w-5 text-primary" />
-              <h3 className="text-base font-bold text-foreground">No Upcoming Classes</h3>
+              <span className="font-semibold text-foreground">Today</span>
             </div>
             <p className="text-sm text-muted-foreground">You have no scheduled classes at the moment.</p>
           </div>
