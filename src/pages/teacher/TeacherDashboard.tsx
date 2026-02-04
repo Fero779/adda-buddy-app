@@ -10,7 +10,9 @@ import {
   FileText,
   ChevronRight,
   Calendar,
-  QrCode
+  QrCode,
+  Radio,
+  Youtube
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -60,11 +62,21 @@ const TeacherDashboard: React.FC = () => {
     return upcomingClasses[0] || null;
   }, []);
 
-  // Count today's classes
-  const todayClassCount = useMemo(() => {
+  // Get all today's classes (sorted by time)
+  const todaysClasses = useMemo(() => {
     const today = new Date().toISOString().split('T')[0];
-    return allClasses.filter(cls => cls.date === today).length;
+    return allClasses
+      .filter(cls => cls.date === today)
+      .sort((a, b) => a.time.localeCompare(b.time));
   }, []);
+
+  const getPlatformIcon = (platform: 'adda' | 'youtube') => {
+    return platform === 'adda' ? (
+      <Radio className="h-3.5 w-3.5 text-primary" />
+    ) : (
+      <Youtube className="h-3.5 w-3.5 text-destructive" />
+    );
+  };
 
   return (
     <AppShell showGreeting>
@@ -127,46 +139,77 @@ const TeacherDashboard: React.FC = () => {
           <ChevronRight className="h-5 w-5 text-muted-foreground" />
         </button>
 
-        {/* Today's Classes Card */}
-        {nextClass ? (
-          <div className="p-5 rounded-2xl bg-card shadow-card">
-            {/* Header */}
-            <div className="flex items-center gap-2 mb-4">
-              <Calendar className="h-5 w-5 text-primary" />
-              <span className="font-semibold text-foreground">Today</span>
-            </div>
-            
-            {/* Content - Left: Count, Right: Next Class Info */}
-            <div className="flex items-start justify-between mb-4">
+        {/* Section 1: Next Class At */}
+        <div className="p-4 rounded-2xl bg-card shadow-card">
+          <div className="flex items-center gap-2 mb-3">
+            <Clock className="h-5 w-5 text-primary" />
+            <span className="font-semibold text-foreground">Next Class At</span>
+          </div>
+          
+          {nextClass ? (
+            <div className="flex items-center justify-between">
               <div>
-                <p className="text-3xl font-bold text-foreground">{todayClassCount}</p>
-                <p className="text-sm text-muted-foreground">Classes scheduled</p>
+                <p className="font-medium text-foreground">{nextClass.title}</p>
+                <p className="text-sm text-muted-foreground">{nextClass.subject}</p>
               </div>
               <div className="text-right">
-                <p className="text-sm text-muted-foreground">Next class at</p>
                 <p className="text-xl font-bold text-primary">{nextClass.displayTime}</p>
-                <p className="text-sm text-muted-foreground">{nextClass.title.split(' - ')[0]}</p>
+                <p className="text-xs text-muted-foreground">{nextClass.duration}</p>
               </div>
             </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">No upcoming classes scheduled.</p>
+          )}
 
-            {/* Login Studio App CTA */}
+          {/* Login Studio App CTA */}
+          {nextClass && (
             <button
               onClick={() => setShowStudioScanner(true)}
-              className="w-full py-2.5 rounded-xl border border-primary/30 text-primary font-medium flex items-center justify-center gap-2 hover:bg-primary/5 transition-colors active:scale-[0.98]"
+              className="w-full mt-4 py-2.5 rounded-xl border border-primary/30 text-primary font-medium flex items-center justify-center gap-2 hover:bg-primary/5 transition-colors active:scale-[0.98]"
             >
               <QrCode className="h-4 w-4" />
               Login Studio App (Scan QR)
             </button>
-          </div>
-        ) : (
-          <div className="p-5 rounded-2xl bg-card shadow-card">
-            <div className="flex items-center gap-2 mb-4">
+          )}
+        </div>
+
+        {/* Section 2: Today's Classes */}
+        <div className="p-4 rounded-2xl bg-card shadow-card">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
               <Calendar className="h-5 w-5 text-primary" />
-              <span className="font-semibold text-foreground">Today</span>
+              <span className="font-semibold text-foreground">Today's Classes</span>
             </div>
-            <p className="text-sm text-muted-foreground">You have no scheduled classes at the moment.</p>
+            <span className="text-sm text-muted-foreground">{todaysClasses.length} classes</span>
           </div>
-        )}
+          
+          {todaysClasses.length > 0 ? (
+            <div className="space-y-3">
+              {todaysClasses.map((cls, index) => (
+                <div 
+                  key={cls.id}
+                  className={`flex items-center gap-3 ${index !== todaysClasses.length - 1 ? 'pb-3 border-b border-border' : ''}`}
+                >
+                  {/* Time */}
+                  <div className="w-16 text-center">
+                    <p className="text-sm font-semibold text-foreground">{cls.displayTime}</p>
+                  </div>
+                  
+                  {/* Class Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      {getPlatformIcon(cls.platform)}
+                      <p className="font-medium text-foreground text-sm truncate">{cls.title}</p>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{cls.subject} • {cls.duration}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">No classes scheduled for today.</p>
+          )}
+        </div>
       </div>
 
       {/* QR Scanner Modal - Admin Login */}
