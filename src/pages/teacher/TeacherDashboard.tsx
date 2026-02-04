@@ -152,10 +152,19 @@ const TeacherDashboard: React.FC = () => {
 
             {/* Primary CTA - Join Class */}
             <button 
-              className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground font-semibold flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors active:scale-[0.98]"
+              className="w-full py-3.5 rounded-xl bg-primary text-primary-foreground font-semibold flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors active:scale-[0.98] mb-3"
             >
               <Video className="h-5 w-5" />
               Join Next Class
+            </button>
+
+            {/* Secondary CTA - Login Studio App */}
+            <button
+              onClick={() => setShowStudioScanner(true)}
+              className="w-full py-2.5 rounded-xl border border-primary/30 text-primary font-medium flex items-center justify-center gap-2 hover:bg-primary/5 transition-colors active:scale-[0.98]"
+            >
+              <QrCode className="h-4 w-4" />
+              Login Studio App (Scan QR)
             </button>
           </div>
         ) : (
