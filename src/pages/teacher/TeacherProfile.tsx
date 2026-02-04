@@ -44,7 +44,6 @@ const TeacherProfile: React.FC = () => {
             <div className="flex items-center gap-1 mt-1">
               <Star className="h-4 w-4 text-warning fill-warning" />
               <span className="text-sm font-medium text-foreground">4.9</span>
-              <span className="text-sm text-muted-foreground">(2,840 students)</span>
             </div>
           </div>
         </div>
