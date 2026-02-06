@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
+import { FloatingQRButton } from '@/components/FloatingQRButton';
 import { useAuth } from '@/contexts/AuthContext';
 import { QRScanner } from '@/components/QRScanner';
 import { StudioQRScanner } from '@/components/StudioQRScanner';
@@ -12,7 +13,8 @@ import {
   Calendar,
   QrCode,
   Radio,
-  Youtube
+  Youtube,
+  Monitor
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -33,7 +35,6 @@ const getDateString = (daysFromNow: number = 0) => {
 };
 
 // All upcoming classes - API will provide sorted by datetime
-// Using relative dates so classes always show
 const allClasses = [
   { id: '1', title: 'SSC CGL Maths', subject: 'Mathematics', date: getDateString(0), time: '16:00', displayTime: '4:00 PM', duration: '90 min', status: 'upcoming' as const, platform: 'adda' as const },
   { id: '2', title: 'Bank PO - Data Interpretation', subject: 'Quantitative', date: getDateString(0), time: '18:30', displayTime: '6:30 PM', duration: '60 min', status: 'upcoming' as const, platform: 'youtube' as const },
@@ -78,8 +79,12 @@ const TeacherDashboard: React.FC = () => {
     );
   };
 
+  const handleQRScan = () => {
+    setShowQRScanner(true);
+  };
+
   return (
-    <AppShell showGreeting>
+    <AppShell showGreeting onQRScan={handleQRScan}>
       <div className="px-4 py-4 space-y-4">
         {/* Teacher Header Card */}
         <div className="p-5 rounded-2xl bg-card shadow-card">
@@ -124,21 +129,6 @@ const TeacherDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Scan QR to Login PC */}
-        <button
-          onClick={() => setShowQRScanner(true)}
-          className="w-full flex items-center gap-3 p-4 rounded-xl bg-card shadow-card hover:shadow-elevated transition-all active:scale-[0.99]"
-        >
-          <div className="p-2.5 rounded-lg bg-primary/10">
-            <QrCode className="h-5 w-5 text-primary" />
-          </div>
-          <div className="flex-1 text-left">
-            <p className="font-semibold text-foreground text-sm">Scan QR to Login PC</p>
-            <p className="text-xs text-muted-foreground">Access your dashboard on desktop</p>
-          </div>
-          <ChevronRight className="h-5 w-5 text-muted-foreground" />
-        </button>
-
         {/* Section 1: Next Class At */}
         <div className="p-4 rounded-2xl bg-card shadow-card">
           <div className="flex items-center gap-2 mb-3">
@@ -161,7 +151,7 @@ const TeacherDashboard: React.FC = () => {
             <p className="text-sm text-muted-foreground">No upcoming classes scheduled.</p>
           )}
 
-          {/* Login Studio App CTA */}
+          {/* Login Studio App CTA - Kept as is */}
           {nextClass && (
             <button
               onClick={() => setShowStudioScanner(true)}
@@ -210,7 +200,22 @@ const TeacherDashboard: React.FC = () => {
             <p className="text-sm text-muted-foreground">No classes scheduled for today.</p>
           )}
         </div>
+
+        {/* Subtle list item - PC Login (de-emphasized) */}
+        <button
+          onClick={handleQRScan}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-card/50 hover:bg-card transition-colors"
+        >
+          <Monitor className="h-4 w-4 text-muted-foreground" />
+          <span className="flex-1 text-left text-sm text-muted-foreground">
+            Login to PC Dashboard
+          </span>
+          <ChevronRight className="h-4 w-4 text-muted-foreground/60" />
+        </button>
       </div>
+
+      {/* Floating QR Button */}
+      <FloatingQRButton onClick={handleQRScan} showTooltip />
 
       {/* QR Scanner Modal - Admin Login */}
       {showQRScanner && (
