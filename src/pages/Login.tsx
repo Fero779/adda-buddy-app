@@ -1,31 +1,42 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Phone, ArrowRight, Loader2 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import EmailInput from '@/components/auth/EmailInput';
+import OtpInput from '@/components/auth/OtpInput';
+import { 
+  sendOtp, 
+  verifyOtp, 
+  setAuthSession, 
+  getCurrentSession, 
+  isValidEmail 
+} from '@/services/authService';
+import { supabase } from '@/integrations/supabase/client';
 
-type LoginStep = 'phone' | 'otp';
+type AuthStep = 'email' | 'otp';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const [step, setStep] = useState<LoginStep>('phone');
-  const [phone, setPhone] = useState('');
-  const [countryCode, setCountryCode] = useState('+91');
+  const [step, setStep] = useState<AuthStep>('email');
+  const [email, setEmail] = useState('');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [isLoading, setIsLoading] = useState(false);
+  const [emailError, setEmailError] = useState<string>();
+  const [otpError, setOtpError] = useState<string>();
   const [debugOtp, setDebugOtp] = useState<string | null>(null);
   const [resendTimer, setResendTimer] = useState(0);
 
   // Check if already logged in
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const checkExistingSession = async () => {
+      const session = await getCurrentSession();
       if (session) {
         checkUserOnboarding(session.user.id);
       }
-    });
+    };
+    checkExistingSession();
   }, []);
 
-  // Resend timer
+  // Resend timer countdown
   useEffect(() => {
     if (resendTimer > 0) {
       const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
@@ -41,112 +52,99 @@ const Login: React.FC = () => {
       .single();
 
     if (profile?.onboarded && profile?.role) {
-      navigate(`/${profile.role}`);
+      // Phase 1: Teacher only
+      navigate('/teacher');
     } else {
       navigate('/role-selection');
     }
   };
 
-  const fullPhone = `${countryCode}${phone}`;
-
   const handleSendOtp = async () => {
-    if (!phone || phone.length < 10) {
-      toast.error('Please enter a valid 10-digit mobile number');
+    // Clear previous errors
+    setEmailError(undefined);
+
+    // Validate email
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) {
+      setEmailError('Please enter your email address');
+      return;
+    }
+
+    if (!isValidEmail(trimmedEmail)) {
+      setEmailError('Please enter a valid email address');
       return;
     }
 
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('send-otp', {
-        body: { phone: fullPhone }
-      });
+      const response = await sendOtp(trimmedEmail);
 
-      if (error) throw error;
-
-      if (data.success) {
+      if (response.success) {
         setStep('otp');
         setResendTimer(30);
         toast.success('OTP sent successfully!');
         
-        // For testing - show OTP in toast (REMOVE IN PRODUCTION)
-        if (data.debug_otp) {
-          setDebugOtp(data.debug_otp);
-          toast.info(`Test OTP: ${data.debug_otp}`, { duration: 10000 });
+        // Store email for session
+        localStorage.setItem('auth_email', trimmedEmail);
+
+        // Debug OTP display (remove in production)
+        if (response.debug_otp) {
+          setDebugOtp(response.debug_otp);
+          toast.info(`Test OTP: ${response.debug_otp}`, { duration: 10000 });
         }
       } else {
-        throw new Error(data.error || 'Failed to send OTP');
+        setEmailError(response.error || 'Failed to send OTP');
       }
     } catch (error: any) {
-      console.error('Send OTP error:', error);
-      toast.error(error.message || 'Failed to send OTP');
+      setEmailError(error.message || 'Something went wrong');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleOtpChange = (index: number, value: string) => {
-    if (value.length > 1) return;
-    
-    const newOtp = [...otp];
-    newOtp[index] = value;
-    setOtp(newOtp);
-
-    // Auto-focus next input
-    if (value && index < 5) {
-      const nextInput = document.getElementById(`otp-${index + 1}`);
-      nextInput?.focus();
-    }
-  };
-
-  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent) => {
-    if (e.key === 'Backspace' && !otp[index] && index > 0) {
-      const prevInput = document.getElementById(`otp-${index - 1}`);
-      prevInput?.focus();
-    }
-  };
-
   const handleVerifyOtp = async () => {
+    // Clear previous errors
+    setOtpError(undefined);
+
     const otpString = otp.join('');
     if (otpString.length !== 6) {
-      toast.error('Please enter the complete 6-digit OTP');
+      setOtpError('Please enter the complete 6-digit OTP');
       return;
     }
 
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('verify-otp', {
-        body: { phone: fullPhone, otp: otpString }
-      });
+      const response = await verifyOtp(email, otpString);
 
-      if (error) throw error;
-
-      if (data.success && data.session) {
-        // Set the session directly from the edge function response
-        const { error: sessionError } = await supabase.auth.setSession({
-          access_token: data.session.access_token,
-          refresh_token: data.session.refresh_token
-        });
-
-        if (sessionError) {
-          console.error('Session error:', sessionError);
-          toast.error('Failed to establish session');
-          return;
-        }
+      if (response.success && response.session) {
+        // Set the auth session
+        await setAuthSession(
+          response.session.access_token,
+          response.session.refresh_token
+        );
 
         toast.success('Login successful!');
         
         // Navigate based on user status
-        if (data.isNewUser || !data.user.onboarded) {
+        if (response.isNewUser || !response.user?.onboarded) {
           navigate('/role-selection');
         } else {
-          navigate(`/${data.user.role}`);
+          // Phase 1: Teacher only
+          navigate('/teacher');
         }
       } else {
-        throw new Error(data.error || 'Invalid OTP');
+        // Handle specific error cases
+        const errorMessage = response.error || 'Invalid OTP';
+        if (errorMessage.toLowerCase().includes('expired')) {
+          setOtpError('OTP has expired. Please request a new one.');
+        } else if (errorMessage.toLowerCase().includes('invalid')) {
+          setOtpError('Incorrect OTP. Please try again.');
+        } else {
+          setOtpError(errorMessage);
+        }
       }
     } catch (error: any) {
-      console.error('Verify OTP error:', error);
-      toast.error(error.message || 'Invalid OTP');
+      setOtpError(error.message || 'Verification failed');
     } finally {
       setIsLoading(false);
     }
@@ -155,7 +153,16 @@ const Login: React.FC = () => {
   const handleResendOtp = () => {
     if (resendTimer > 0) return;
     setOtp(['', '', '', '', '', '']);
+    setOtpError(undefined);
+    setDebugOtp(null);
     handleSendOtp();
+  };
+
+  const handleChangeEmail = () => {
+    setStep('email');
+    setOtp(['', '', '', '', '', '']);
+    setOtpError(undefined);
+    setDebugOtp(null);
   };
 
   return (
@@ -172,13 +179,13 @@ const Login: React.FC = () => {
           </div>
         </div>
 
-        {step === 'phone' ? (
+        {step === 'email' ? (
           <>
             <h1 className="text-3xl font-bold text-foreground mb-2">
               Welcome! 👋
             </h1>
             <p className="text-muted-foreground text-lg">
-              Enter your mobile number to get started
+              Enter your email to get started
             </p>
           </>
         ) : (
@@ -187,8 +194,9 @@ const Login: React.FC = () => {
               Enter OTP
             </h1>
             <p className="text-muted-foreground">
-              We've sent a 6-digit code to<br />
-              <span className="font-semibold text-foreground">{fullPhone}</span>
+              Verification code sent to
+              <br />
+              <span className="font-semibold text-foreground">{email}</span>
             </p>
           </>
         )}
@@ -196,131 +204,33 @@ const Login: React.FC = () => {
 
       {/* Form */}
       <div className="flex-1 px-6">
-        {step === 'phone' ? (
-          <div className="space-y-6 animate-slide-up">
-            {/* Phone Input */}
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-2">
-                Mobile Number
-              </label>
-              <div className="flex gap-2">
-                <div className="relative">
-                  <select
-                    value={countryCode}
-                    onChange={(e) => setCountryCode(e.target.value)}
-                    className="h-14 w-24 px-3 rounded-xl bg-card border border-border text-foreground font-medium appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  >
-                    <option value="+91">🇮🇳 +91</option>
-                    <option value="+1">🇺🇸 +1</option>
-                    <option value="+44">🇬🇧 +44</option>
-                    <option value="+971">🇦🇪 +971</option>
-                  </select>
-                </div>
-                <div className="relative flex-1">
-                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                    placeholder="Enter mobile number"
-                    className="w-full h-14 pl-12 pr-4 rounded-xl bg-card border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 text-lg"
-                    maxLength={10}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Send OTP Button */}
-            <button
-              onClick={handleSendOtp}
-              disabled={isLoading || phone.length < 10}
-              className="w-full h-14 rounded-xl gradient-primary text-primary-foreground font-semibold text-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity active:scale-[0.98]"
-            >
-              {isLoading ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
-              ) : (
-                <>
-                  Get OTP
-                  <ArrowRight className="h-5 w-5" />
-                </>
-              )}
-            </button>
-          </div>
+        {step === 'email' ? (
+          <EmailInput
+            email={email}
+            onEmailChange={(value) => {
+              setEmail(value);
+              setEmailError(undefined);
+            }}
+            onSubmit={handleSendOtp}
+            isLoading={isLoading}
+            error={emailError}
+          />
         ) : (
-          <div className="space-y-6 animate-slide-up">
-            {/* OTP Input */}
-            <div className="flex justify-center gap-3">
-              {otp.map((digit, index) => (
-                <input
-                  key={index}
-                  id={`otp-${index}`}
-                  type="text"
-                  inputMode="numeric"
-                  value={digit}
-                  onChange={(e) => handleOtpChange(index, e.target.value.replace(/\D/g, ''))}
-                  onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                  className="w-12 h-14 text-center text-xl font-bold rounded-xl bg-card border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
-                  maxLength={1}
-                  autoFocus={index === 0}
-                />
-              ))}
-            </div>
-
-            {/* Debug OTP Display */}
-            {debugOtp && (
-              <div className="p-3 rounded-lg bg-accent border border-border text-center">
-                <p className="text-xs text-muted-foreground">Test OTP (remove in production)</p>
-                <p className="text-lg font-bold text-primary tracking-widest">{debugOtp}</p>
-              </div>
-            )}
-
-            {/* Verify Button */}
-            <button
-              onClick={handleVerifyOtp}
-              disabled={isLoading || otp.join('').length !== 6}
-              className="w-full h-14 rounded-xl gradient-primary text-primary-foreground font-semibold text-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity active:scale-[0.98]"
-            >
-              {isLoading ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
-              ) : (
-                <>
-                  Verify & Continue
-                  <ArrowRight className="h-5 w-5" />
-                </>
-              )}
-            </button>
-
-            {/* Resend OTP */}
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground">
-                Didn't receive the code?{' '}
-                {resendTimer > 0 ? (
-                  <span className="font-medium text-foreground">
-                    Resend in {resendTimer}s
-                  </span>
-                ) : (
-                  <button
-                    onClick={handleResendOtp}
-                    className="font-semibold text-primary hover:underline"
-                  >
-                    Resend OTP
-                  </button>
-                )}
-              </p>
-            </div>
-
-            {/* Change Number */}
-            <button
-              onClick={() => {
-                setStep('phone');
-                setOtp(['', '', '', '', '', '']);
-                setDebugOtp(null);
-              }}
-              className="w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              ← Change mobile number
-            </button>
-          </div>
+          <OtpInput
+            otp={otp}
+            onOtpChange={(newOtp) => {
+              setOtp(newOtp);
+              setOtpError(undefined);
+            }}
+            onSubmit={handleVerifyOtp}
+            onResend={handleResendOtp}
+            onChangeEmail={handleChangeEmail}
+            email={email}
+            isLoading={isLoading}
+            resendTimer={resendTimer}
+            error={otpError}
+            debugOtp={debugOtp}
+          />
         )}
       </div>
 
@@ -328,9 +238,13 @@ const Login: React.FC = () => {
       <div className="px-6 py-8 text-center animate-fade-in" style={{ animationDelay: '0.3s' }}>
         <p className="text-sm text-muted-foreground">
           By continuing, you agree to our{' '}
-          <span className="text-primary font-medium">Terms of Service</span>
+          <button className="text-primary font-medium hover:underline">
+            Terms of Service
+          </button>
           {' '}and{' '}
-          <span className="text-primary font-medium">Privacy Policy</span>
+          <button className="text-primary font-medium hover:underline">
+            Privacy Policy
+          </button>
         </p>
       </div>
     </div>
