@@ -40,8 +40,9 @@ export const Header: React.FC<HeaderProps> = ({ title, showGreeting = false, onQ
           {onQRScan && (
             <button 
               onClick={onQRScan}
-              className="p-2 rounded-full hover:bg-accent transition-colors"
-              aria-label="Scan QR to login on PC"
+              className="p-2 rounded-full hover:bg-accent transition-colors group relative"
+              aria-label="Login Admin Dashboard (PC)"
+              title="Login Admin Dashboard (PC)"
             >
               <QrCode className="h-5 w-5 text-muted-foreground" />
             </button>
