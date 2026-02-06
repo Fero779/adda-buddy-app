@@ -1,1 +1,7 @@
 project_id = "anrpechkulaykdyceyna"
+
+[functions.send-otp-email]
+verify_jwt = false
+
+[functions.verify-otp-email]
+verify_jwt = false
